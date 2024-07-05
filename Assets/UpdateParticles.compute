@@ -1,0 +1,45 @@
+#pragma kernel InitializeParticles
+#pragma kernel UpdateParticles
+
+RWStructuredBuffer<float3> _PositionBuffer;
+
+
+float _Time, _R;
+
+float hash(uint n) {
+    // integer hash copied from Hugo Elias
+    n = (n << 13U) ^ n;
+    n = n * (n * n * 15731U + 0x789221U) + 0x1376312589U;
+    return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
+}
+
+[numthreads(8,8,1)]
+void InitializeParticles(uint3 id : SV_DispatchThreadID) {
+    _PositionBuffer[id.x] = float3(hash(id.x), hash(id.x * 2), hash(id.x * 3)) * 5;
+}
+
+[numthreads(8,8,1)]
+void UpdateParticles(uint3 id : SV_DispatchThreadID) {
+    float3 A = float3(0, 3, 0);
+    float3 B = float3(2, 0, 0);
+    float3 C = float3(-2, 0, 0);
+
+    float3 currentPos = _PositionBuffer[id.x];
+
+    uint seed = id.x + floor(currentPos.x * 10 + currentPos.y * 100);
+
+    float rand = hash(seed);
+
+    float3 newPosition = 0;
+    if (rand >= 0.66f) {
+        newPosition = (currentPos + A) * _R;
+    }
+    else if (rand >= 0.33f) {
+        newPosition = (currentPos + B) * _R;
+    }
+    else {
+        newPosition = (currentPos + C) * _R;
+    }
+
+    _PositionBuffer[id.x] = newPosition;
+}

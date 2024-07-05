@@ -1,15 +1,11 @@
 Shader "Custom/Particle" {
 
-	Properties {
-		_Albedo ("Albedo", Color) = (1, 1, 1, 1)
-	}
-
 	SubShader {
 
 		Pass {
 			Tags {
 				"RenderType" = "Opaque"
-                "LightMode" = "ForwardBase"
+				"LightMode" = "ForwardBase"
 			}
 
 			CGPROGRAM
@@ -17,11 +13,9 @@ Shader "Custom/Particle" {
 			#pragma vertex vp
 			#pragma fragment fp
 
-            #include "UnityCG.cginc"
-            #define UNITY_INDIRECT_DRAW_ARGS IndirectDrawArgs
-            #include "UnityIndirect.cginc"
-
-			float4 _Albedo;
+			#include "UnityCG.cginc"
+			#define UNITY_INDIRECT_DRAW_ARGS IndirectDrawArgs
+			#include "UnityIndirect.cginc"
 
 			struct VertexData {
 				float4 vertex : POSITION;
@@ -32,27 +26,27 @@ Shader "Custom/Particle" {
 				float3 worldPos : TEXCOORD0;
 			};
 
+			StructuredBuffer<float3> _ParticlePositions;
+
 			v2f vp(VertexData v, uint svInstanceID : SV_INSTANCEID) {
-                InitIndirectDrawArgs(0);
+				InitIndirectDrawArgs(0);
 
 				v2f i;
 				
-                uint instanceID = GetIndirectInstanceID(svInstanceID);
-                
-                float4 pos = v.vertex;
+				uint instanceID = GetIndirectInstanceID(svInstanceID);
+				
+				float4 pos = float4(_ParticlePositions[svInstanceID], v.vertex.a);
 
-                pos.x += instanceID;
-
-                i.pos = UnityObjectToClipPos(pos);
+				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
 
 				return i;
 			}
 
 			float4 fp(v2f i) : SV_TARGET {
-                float3 col = _Albedo.rgb;
+				float3 col = 1;
 
-                return float4(1, 0, 0, 1);
+				return float4(col, 1);
 			}
 
 			ENDCG
