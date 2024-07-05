@@ -19,9 +19,11 @@ public class ParticleInstancer : MonoBehaviour {
     private GraphicsBuffer commandBuffer;
     private GraphicsBuffer.IndirectDrawArgs[] commandData;
 
+    private Vector3[] attractorPositions;
+
     private RenderParams renderParams;
 
-    private ComputeBuffer particlePositionBuffer;
+    private ComputeBuffer particlePositionBuffer, attractorsBuffer;
 
     private float t;
 
@@ -47,12 +49,25 @@ public class ParticleInstancer : MonoBehaviour {
         particleUpdater.SetBuffer(0, "_PositionBuffer", particlePositionBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
-        // Vector3[] data = new Vector3[particleCount];
-        // particlePositionBuffer.GetData(data);
+        List<Transform> attractorTransforms = new List<Transform>();
+        GetComponentsInChildren<Transform>(attractorTransforms);
+        attractorTransforms.RemoveAt(0);
 
-        // for (int i = 0; i < particleCount; ++i) {
-        //     Debug.Log(data[i]);
-        // }
+        attractorPositions = new Vector3[attractorTransforms.Count];
+
+        for (int i = 0; i < attractorTransforms.Count; ++i) {
+            attractorPositions[i] = attractorTransforms[i].position;
+        }
+
+        attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        attractorsBuffer.SetData(attractorPositions);
+
+        Vector3[] data = new Vector3[attractorTransforms.Count];
+        attractorsBuffer.GetData(data);
+
+        for (int i = 0; i < attractorTransforms.Count; ++i) {
+            Debug.Log(data[i]);
+        }
 
         t = 0;
     }
@@ -62,22 +77,33 @@ public class ParticleInstancer : MonoBehaviour {
         particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
         particleUpdater.SetFloat("_R", r);
 
-        t += Time.deltaTime;
-        if (t >= 2.0f) t = 0;
+        List<Transform> attractorTransforms = new List<Transform>();
+        GetComponentsInChildren<Transform>(attractorTransforms);
+        attractorTransforms.RemoveAt(0);
 
-        int kernel = (int)Mathf.Floor(t) + 1;
+        attractorPositions = new Vector3[attractorTransforms.Count];
 
-        particleUpdater.SetBuffer(kernel, "_PositionBuffer", particlePositionBuffer);
-        particleUpdater.Dispatch(kernel, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+        for (int i = 0; i < attractorTransforms.Count; ++i) {
+            attractorPositions[i] = attractorTransforms[i].position;
+        }
+        
+        attractorsBuffer.SetData(attractorPositions);
+
+        particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
+        particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
+        particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
+        particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
         Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
     }
 
     void OnDisable() {
         commandBuffer.Release();
+        attractorsBuffer.Release();
         particlePositionBuffer.Release();
 
         commandBuffer = null;
+        attractorsBuffer = null;
         particlePositionBuffer = null;
         commandData = null;
         particleMaterial = null;

@@ -1,8 +1,11 @@
 #pragma kernel InitializeParticles
+#pragma kernel GenericChaosGame
 #pragma kernel SierpinskiTriangle2D
 #pragma kernel Vicsek2D
 
 RWStructuredBuffer<float3> _PositionBuffer;
+StructuredBuffer<float3> _Attractors;
+uint _PointCount;
 
 
 float _Time, _R, _DeltaTime;
@@ -17,6 +20,22 @@ float hash(uint n) {
 [numthreads(8,8,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
     _PositionBuffer[id.x] = 0;
+}
+
+[numthreads(8,8,1)]
+void GenericChaosGame(uint3 id : SV_DispatchThreadID) {
+    float3 currentPos = _PositionBuffer[id.x];
+
+    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
+
+    float rand = hash(seed);
+    uint index = floor(rand * _PointCount);
+
+    float3 attractor = _Attractors[index];
+
+    float3 newPosition = (currentPos + attractor) * _R;
+
+    _PositionBuffer[id.x] = newPosition;
 }
 
 [numthreads(8,8,1)]
