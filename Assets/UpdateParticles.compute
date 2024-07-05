@@ -1,6 +1,6 @@
 #pragma kernel InitializeParticles
 #pragma kernel SierpinskiTriangle2D
-#pragma kernel Vicskel2D
+#pragma kernel Vicsek2D
 
 RWStructuredBuffer<float3> _PositionBuffer;
 
@@ -42,7 +42,7 @@ void SierpinskiTriangle2D(uint3 id : SV_DispatchThreadID) {
 }
 
 [numthreads(8,8,1)]
-void Vicskel2D(uint3 id : SV_DispatchThreadID) {
+void Vicsek2D(uint3 id : SV_DispatchThreadID) {
     int pointCount = 5;
 
     float3 A = float3(-0.5, 0, 0);
