@@ -6,6 +6,11 @@ public class ParticleInstancer : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
+    public enum Attractor {
+        SierpinskiTriangle2D = 1,
+        Vicsek2D,
+    } public Attractor attractor;
+
     [Range(0.0f, 2.0f)]
     public float r = 0.5f;
 
@@ -17,6 +22,8 @@ public class ParticleInstancer : MonoBehaviour {
     private RenderParams renderParams;
 
     private ComputeBuffer particlePositionBuffer;
+
+    private float t;
 
     private uint particleCount = 200000;
 
@@ -46,13 +53,22 @@ public class ParticleInstancer : MonoBehaviour {
         // for (int i = 0; i < particleCount; ++i) {
         //     Debug.Log(data[i]);
         // }
+
+        t = 0;
     }
 
     void Update() {
         particleUpdater.SetFloat("_Time", Time.time);
+        particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
         particleUpdater.SetFloat("_R", r);
-        particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
-        particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+
+        t += Time.deltaTime;
+        if (t >= 2.0f) t = 0;
+
+        int kernel = (int)Mathf.Floor(t) + 1;
+
+        particleUpdater.SetBuffer(kernel, "_PositionBuffer", particlePositionBuffer);
+        particleUpdater.Dispatch(kernel, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
         Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
     }

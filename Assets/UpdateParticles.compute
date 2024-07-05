@@ -1,10 +1,11 @@
 #pragma kernel InitializeParticles
-#pragma kernel UpdateParticles
+#pragma kernel SierpinskiTriangle2D
+#pragma kernel Vicskel2D
 
 RWStructuredBuffer<float3> _PositionBuffer;
 
 
-float _Time, _R;
+float _Time, _R, _DeltaTime;
 
 float hash(uint n) {
     // integer hash copied from Hugo Elias
@@ -15,31 +16,51 @@ float hash(uint n) {
 
 [numthreads(8,8,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
-    _PositionBuffer[id.x] = float3(hash(id.x), hash(id.x * 2), hash(id.x * 3)) * 5;
+    _PositionBuffer[id.x] = 0;
 }
 
 [numthreads(8,8,1)]
-void UpdateParticles(uint3 id : SV_DispatchThreadID) {
-    float3 A = float3(0, 3, 0);
-    float3 B = float3(2, 0, 0);
-    float3 C = float3(-2, 0, 0);
+void SierpinskiTriangle2D(uint3 id : SV_DispatchThreadID) {
+    int pointCount = 3;
+
+    float3 A = float3(0, 0.5, 0);
+    float3 B = float3(0.35, 0, 0);
+    float3 C = float3(-0.35, 0, 0);
+
+    float3 points[] = {A, B, C};
 
     float3 currentPos = _PositionBuffer[id.x];
 
-    uint seed = id.x + floor(currentPos.x * 10 + currentPos.y * 100);
+    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
 
     float rand = hash(seed);
+    uint index = floor(rand * pointCount);
 
-    float3 newPosition = 0;
-    if (rand >= 0.66f) {
-        newPosition = (currentPos + A) * _R;
-    }
-    else if (rand >= 0.33f) {
-        newPosition = (currentPos + B) * _R;
-    }
-    else {
-        newPosition = (currentPos + C) * _R;
-    }
+    float3 newPosition = (currentPos + points[index]) * 0.5 * _R;
+
+    _PositionBuffer[id.x] = newPosition;
+}
+
+[numthreads(8,8,1)]
+void Vicskel2D(uint3 id : SV_DispatchThreadID) {
+    int pointCount = 5;
+
+    float3 A = float3(-0.5, 0, 0);
+    float3 B = float3(0.5, 0, 0);
+    float3 C = float3(-0.5, 1, 0);
+    float3 D = float3(0.5, 1, 0);
+    float3 E = float3(0, 0.5, 0);
+
+    float3 points[] = {A, B, C, D, E};
+
+    float3 currentPos = _PositionBuffer[id.x];
+
+    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
+
+    float rand = hash(seed);
+    uint index = floor(rand * pointCount);
+
+    float3 newPosition = (currentPos + points[index]) * 0.33 * _R;
 
     _PositionBuffer[id.x] = newPosition;
 }
