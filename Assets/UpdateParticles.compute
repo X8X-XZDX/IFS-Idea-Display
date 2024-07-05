@@ -26,7 +26,7 @@ void InitializeParticles(uint3 id : SV_DispatchThreadID) {
 void GenericChaosGame(uint3 id : SV_DispatchThreadID) {
     float3 currentPos = _PositionBuffer[id.x];
 
-    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
+    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100 + currentPos.z * 1000;
 
     float rand = hash(seed);
     uint index = floor(rand * _PointCount);

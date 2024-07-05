@@ -7,9 +7,11 @@ public class ParticleInstancer : MonoBehaviour {
     public ComputeShader particleUpdater;
 
     public enum Attractor {
-        SierpinskiTriangle2D = 1,
+        Custom = 1,
+        SierpinskiTriangle2D,
         Vicsek2D,
-    } public Attractor attractor;
+    } public Attractor attractor = Attractor.SierpinskiTriangle2D;
+    private Attractor cachedAttractor;
 
     [Range(0.0f, 2.0f)]
     public float r = 0.5f;
@@ -19,7 +21,18 @@ public class ParticleInstancer : MonoBehaviour {
     private GraphicsBuffer commandBuffer;
     private GraphicsBuffer.IndirectDrawArgs[] commandData;
 
-    private Vector3[] attractorPositions;
+    private Vector3[] customAttractorPositions;
+    private Vector3[] sierpinskiTriangle2DAttractors = {
+        new Vector3(0.0f, 0.0f, 0.0f),
+        new Vector3(0.0f, 0.0f, 0.0f),
+        new Vector3(0.0f, 0.0f, 0.0f)
+    };
+
+    private Vector3[] Vicsek2DAttractors = {
+        new Vector3(0.0f, 0.0f, 0.0f),
+        new Vector3(0.0f, 0.0f, 0.0f),
+        new Vector3(0.0f, 0.0f, 0.0f)
+    };
 
     private RenderParams renderParams;
 
@@ -53,14 +66,14 @@ public class ParticleInstancer : MonoBehaviour {
         GetComponentsInChildren<Transform>(attractorTransforms);
         attractorTransforms.RemoveAt(0);
 
-        attractorPositions = new Vector3[attractorTransforms.Count];
+        customAttractorPositions = new Vector3[attractorTransforms.Count];
 
         for (int i = 0; i < attractorTransforms.Count; ++i) {
-            attractorPositions[i] = attractorTransforms[i].position;
+            customAttractorPositions[i] = attractorTransforms[i].position;
         }
 
         attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
-        attractorsBuffer.SetData(attractorPositions);
+        attractorsBuffer.SetData(customAttractorPositions);
 
         // Vector3[] data = new Vector3[attractorTransforms.Count];
         // attractorsBuffer.GetData(data);
@@ -81,18 +94,18 @@ public class ParticleInstancer : MonoBehaviour {
         GetComponentsInChildren<Transform>(attractorTransforms);
         attractorTransforms.RemoveAt(0);
 
-        if (attractorTransforms.Count != attractorPositions.Length) {
-            attractorPositions = new Vector3[attractorTransforms.Count];
-            
+        if (attractorTransforms.Count != customAttractorPositions.Length) {
+            customAttractorPositions = new Vector3[attractorTransforms.Count];
+
             attractorsBuffer.Release();
             attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
         }
 
         for (int i = 0; i < attractorTransforms.Count; ++i) {
-            attractorPositions[i] = attractorTransforms[i].position;
+            customAttractorPositions[i] = attractorTransforms[i].position;
         }
         
-        attractorsBuffer.SetData(attractorPositions);
+        attractorsBuffer.SetData(customAttractorPositions);
 
         particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
         particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
