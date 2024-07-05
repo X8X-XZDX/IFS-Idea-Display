@@ -23,15 +23,17 @@ public class ParticleInstancer : MonoBehaviour {
 
     private Vector3[] customAttractorPositions;
     private Vector3[] sierpinskiTriangle2DAttractors = {
-        new Vector3(0.0f, 0.0f, 0.0f),
-        new Vector3(0.0f, 0.0f, 0.0f),
-        new Vector3(0.0f, 0.0f, 0.0f)
+        new Vector3(0.0f, 0.5f, 0.0f),
+        new Vector3(0.35f, 0.0f, 0.0f),
+        new Vector3(-0.35f, 0.0f, 0.0f)
     };
 
     private Vector3[] Vicsek2DAttractors = {
-        new Vector3(0.0f, 0.0f, 0.0f),
-        new Vector3(0.0f, 0.0f, 0.0f),
-        new Vector3(0.0f, 0.0f, 0.0f)
+        new Vector3(-0.5f, 0.0f, 0.0f),
+        new Vector3(0.5f, 0.0f, 0.0f),
+        new Vector3(0.0f, 0.5f, 0.0f),
+        new Vector3(-0.5f, 1.0f, 0.0f),
+        new Vector3(0.5f, 1.0f, 0.0f)
     };
 
     private RenderParams renderParams;
@@ -66,14 +68,11 @@ public class ParticleInstancer : MonoBehaviour {
         GetComponentsInChildren<Transform>(attractorTransforms);
         attractorTransforms.RemoveAt(0);
 
-        customAttractorPositions = new Vector3[attractorTransforms.Count];
-
-        for (int i = 0; i < attractorTransforms.Count; ++i) {
-            customAttractorPositions[i] = attractorTransforms[i].position;
-        }
-
-        attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        customAttractorPositions = new Vector3[32];
+        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
         attractorsBuffer.SetData(customAttractorPositions);
+
+        UpdateAttractor();
 
         // Vector3[] data = new Vector3[attractorTransforms.Count];
         // attractorsBuffer.GetData(data);
@@ -85,29 +84,34 @@ public class ParticleInstancer : MonoBehaviour {
         t = 0;
     }
 
+    void UpdateAttractor() {
+        if (attractor == Attractor.Custom) {
+            List<Transform> attractorTransforms = new List<Transform>();
+            GetComponentsInChildren<Transform>(attractorTransforms);
+            attractorTransforms.RemoveAt(0);
+
+            for (int i = 0; i < attractorTransforms.Count; ++i) {
+                customAttractorPositions[i] = attractorTransforms[i].position;
+            }
+            
+            attractorsBuffer.SetData(customAttractorPositions);
+            particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
+        } else if (attractor == Attractor.SierpinskiTriangle2D) {
+            attractorsBuffer.SetData(sierpinskiTriangle2DAttractors);
+            particleUpdater.SetInt("_PointCount", 3);
+        } else if (attractor == Attractor.Vicsek2D) {
+            attractorsBuffer.SetData(Vicsek2DAttractors);
+            particleUpdater.SetInt("_PointCount", 5);
+        }
+    }
+
     void Update() {
         particleUpdater.SetFloat("_Time", Time.time);
         particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
         particleUpdater.SetFloat("_R", r);
 
-        List<Transform> attractorTransforms = new List<Transform>();
-        GetComponentsInChildren<Transform>(attractorTransforms);
-        attractorTransforms.RemoveAt(0);
+        UpdateAttractor();
 
-        if (attractorTransforms.Count != customAttractorPositions.Length) {
-            customAttractorPositions = new Vector3[attractorTransforms.Count];
-
-            attractorsBuffer.Release();
-            attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
-        }
-
-        for (int i = 0; i < attractorTransforms.Count; ++i) {
-            customAttractorPositions[i] = attractorTransforms[i].position;
-        }
-        
-        attractorsBuffer.SetData(customAttractorPositions);
-
-        particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
         particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
         particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
         particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
