@@ -62,12 +62,12 @@ public class ParticleInstancer : MonoBehaviour {
         attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
         attractorsBuffer.SetData(attractorPositions);
 
-        Vector3[] data = new Vector3[attractorTransforms.Count];
-        attractorsBuffer.GetData(data);
+        // Vector3[] data = new Vector3[attractorTransforms.Count];
+        // attractorsBuffer.GetData(data);
 
-        for (int i = 0; i < attractorTransforms.Count; ++i) {
-            Debug.Log(data[i]);
-        }
+        // for (int i = 0; i < attractorTransforms.Count; ++i) {
+        //     Debug.Log(data[i]);
+        // }
 
         t = 0;
     }
@@ -81,7 +81,12 @@ public class ParticleInstancer : MonoBehaviour {
         GetComponentsInChildren<Transform>(attractorTransforms);
         attractorTransforms.RemoveAt(0);
 
-        attractorPositions = new Vector3[attractorTransforms.Count];
+        if (attractorTransforms.Count != attractorPositions.Length) {
+            attractorPositions = new Vector3[attractorTransforms.Count];
+            
+            attractorsBuffer.Release();
+            attractorsBuffer = new ComputeBuffer(attractorTransforms.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        }
 
         for (int i = 0; i < attractorTransforms.Count; ++i) {
             attractorPositions[i] = attractorTransforms[i].position;
