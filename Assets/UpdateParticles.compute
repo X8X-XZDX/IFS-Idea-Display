@@ -1,7 +1,5 @@
 #pragma kernel InitializeParticles
-#pragma kernel GenericChaosGame
-#pragma kernel SierpinskiTriangle2D
-#pragma kernel Vicsek2D
+#pragma kernel ChaosGame
 
 RWStructuredBuffer<float3> _PositionBuffer;
 StructuredBuffer<float3> _Attractors;
@@ -23,7 +21,7 @@ void InitializeParticles(uint3 id : SV_DispatchThreadID) {
 }
 
 [numthreads(8,8,1)]
-void GenericChaosGame(uint3 id : SV_DispatchThreadID) {
+void ChaosGame(uint3 id : SV_DispatchThreadID) {
     float3 currentPos = _PositionBuffer[id.x];
 
     uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100 + currentPos.z * 1000;
@@ -34,52 +32,6 @@ void GenericChaosGame(uint3 id : SV_DispatchThreadID) {
     float3 attractor = _Attractors[index];
 
     float3 newPosition = (currentPos + attractor) * _R;
-
-    _PositionBuffer[id.x] = newPosition;
-}
-
-[numthreads(8,8,1)]
-void SierpinskiTriangle2D(uint3 id : SV_DispatchThreadID) {
-    int pointCount = 3;
-
-    float3 A = float3(0, 0.5, 0);
-    float3 B = float3(0.35, 0, 0);
-    float3 C = float3(-0.35, 0, 0);
-
-    float3 points[] = {A, B, C};
-
-    float3 currentPos = _PositionBuffer[id.x];
-
-    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
-
-    float rand = hash(seed);
-    uint index = floor(rand * pointCount);
-
-    float3 newPosition = (currentPos + points[index]) * 0.5 * _R;
-
-    _PositionBuffer[id.x] = newPosition;
-}
-
-[numthreads(8,8,1)]
-void Vicsek2D(uint3 id : SV_DispatchThreadID) {
-    int pointCount = 5;
-
-    float3 A = float3(-0.5, 0, 0);
-    float3 B = float3(0.5, 0, 0);
-    float3 C = float3(-0.5, 1, 0);
-    float3 D = float3(0.5, 1, 0);
-    float3 E = float3(0, 0.5, 0);
-
-    float3 points[] = {A, B, C, D, E};
-
-    float3 currentPos = _PositionBuffer[id.x];
-
-    uint seed = id.x + currentPos.x * 1000 + currentPos.y * 1100;
-
-    float rand = hash(seed);
-    uint index = floor(rand * pointCount);
-
-    float3 newPosition = (currentPos + points[index]) * 0.33 * _R;
 
     _PositionBuffer[id.x] = newPosition;
 }

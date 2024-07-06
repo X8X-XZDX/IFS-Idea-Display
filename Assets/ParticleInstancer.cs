@@ -18,7 +18,7 @@ public class ParticleInstancer : MonoBehaviour {
 
     private Material particleMaterial;
 
-    private GraphicsBuffer commandBuffer;
+    private GraphicsBuffer commandBuffer, originBuffer, destinationBuffer;
     private GraphicsBuffer.IndirectDrawArgs[] commandData;
 
     private Vector3[] customAttractorPositions;
@@ -38,16 +38,17 @@ public class ParticleInstancer : MonoBehaviour {
 
     private RenderParams renderParams;
 
-    private ComputeBuffer particlePositionBuffer, attractorsBuffer;
+    private ComputeBuffer attractorsBuffer;
 
-    private float t;
+    private float t = 0.0f;
 
     private uint particleCount = 200000;
 
     void OnEnable() {
         particleMaterial = new Material(particleShader);
 
-        particlePositionBuffer = new ComputeBuffer((int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
 
         commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
         commandData = new GraphicsBuffer.IndirectDrawArgs[1];
@@ -58,10 +59,14 @@ public class ParticleInstancer : MonoBehaviour {
         commandData[0].instanceCount = particleCount;
         commandData[0].vertexCountPerInstance = 1;
 
-        renderParams.matProps.SetBuffer("_ParticlePositions", particlePositionBuffer);
+        renderParams.matProps.SetBuffer("_Origins", originBuffer);
+        renderParams.matProps.SetBuffer("_Destinations", destinationBuffer);
 
         commandBuffer.SetData(commandData);
-        particleUpdater.SetBuffer(0, "_PositionBuffer", particlePositionBuffer);
+
+        particleUpdater.SetBuffer(0, "_PositionBuffer", originBuffer);
+        particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+        particleUpdater.SetBuffer(0, "_PositionBuffer", destinationBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
         List<Transform> attractorTransforms = new List<Transform>();
@@ -97,14 +102,17 @@ public class ParticleInstancer : MonoBehaviour {
                 
                 attractorsBuffer.SetData(customAttractorPositions);
                 particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
+                particleUpdater.SetFloat("_R", r);
             break;
             case Attractor.SierpinskiTriangle2D:
                 attractorsBuffer.SetData(sierpinskiTriangle2DAttractors);
                 particleUpdater.SetInt("_PointCount", 3);
+                particleUpdater.SetFloat("_R", 0.5f);
             break;
             case Attractor.Vicsek2D:
                 attractorsBuffer.SetData(Vicsek2DAttractors);
                 particleUpdater.SetInt("_PointCount", 5);
+                particleUpdater.SetFloat("_R", 0.33f);
             break;
         }
 
@@ -114,26 +122,36 @@ public class ParticleInstancer : MonoBehaviour {
     void Update() {
         particleUpdater.SetFloat("_Time", Time.time);
         particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
-        particleUpdater.SetFloat("_R", r);
 
         if (attractor == Attractor.Custom || attractor != cachedAttractor)
             UpdateAttractor();
 
-        particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
-        particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
-        particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+        t += Time.deltaTime * 2.0f;
 
+        if (t >= 1) {
+            Graphics.CopyBuffer(destinationBuffer, originBuffer);
+
+            particleUpdater.SetBuffer(1, "_PositionBuffer", destinationBuffer);
+            particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
+            particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+
+            t = 0;
+        }
+
+        renderParams.matProps.SetFloat("_Interpolator", t);
         Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
     }
 
     void OnDisable() {
         commandBuffer.Release();
         attractorsBuffer.Release();
-        particlePositionBuffer.Release();
+        originBuffer.Release();
+        destinationBuffer.Release();
 
         commandBuffer = null;
         attractorsBuffer = null;
-        particlePositionBuffer = null;
+        originBuffer = null;
+        destinationBuffer = null;
         commandData = null;
         particleMaterial = null;
     }
