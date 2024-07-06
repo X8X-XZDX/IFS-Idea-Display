@@ -85,24 +85,30 @@ public class ParticleInstancer : MonoBehaviour {
     }
 
     void UpdateAttractor() {
-        if (attractor == Attractor.Custom) {
-            List<Transform> attractorTransforms = new List<Transform>();
-            GetComponentsInChildren<Transform>(attractorTransforms);
-            attractorTransforms.RemoveAt(0);
+        switch(attractor) {
+            case Attractor.Custom:
+                List<Transform> attractorTransforms = new List<Transform>();
+                GetComponentsInChildren<Transform>(attractorTransforms);
+                attractorTransforms.RemoveAt(0);
 
-            for (int i = 0; i < attractorTransforms.Count; ++i) {
-                customAttractorPositions[i] = attractorTransforms[i].position;
-            }
-            
-            attractorsBuffer.SetData(customAttractorPositions);
-            particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
-        } else if (attractor == Attractor.SierpinskiTriangle2D) {
-            attractorsBuffer.SetData(sierpinskiTriangle2DAttractors);
-            particleUpdater.SetInt("_PointCount", 3);
-        } else if (attractor == Attractor.Vicsek2D) {
-            attractorsBuffer.SetData(Vicsek2DAttractors);
-            particleUpdater.SetInt("_PointCount", 5);
+                for (int i = 0; i < attractorTransforms.Count; ++i) {
+                    customAttractorPositions[i] = attractorTransforms[i].position;
+                }
+                
+                attractorsBuffer.SetData(customAttractorPositions);
+                particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
+            break;
+            case Attractor.SierpinskiTriangle2D:
+                attractorsBuffer.SetData(sierpinskiTriangle2DAttractors);
+                particleUpdater.SetInt("_PointCount", 3);
+            break;
+            case Attractor.Vicsek2D:
+                attractorsBuffer.SetData(Vicsek2DAttractors);
+                particleUpdater.SetInt("_PointCount", 5);
+            break;
         }
+
+        cachedAttractor = attractor;
     }
 
     void Update() {
@@ -110,7 +116,8 @@ public class ParticleInstancer : MonoBehaviour {
         particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
         particleUpdater.SetFloat("_R", r);
 
-        UpdateAttractor();
+        if (attractor == Attractor.Custom || attractor != cachedAttractor)
+            UpdateAttractor();
 
         particleUpdater.SetBuffer(1, "_PositionBuffer", particlePositionBuffer);
         particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
