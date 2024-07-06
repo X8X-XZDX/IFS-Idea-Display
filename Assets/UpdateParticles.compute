@@ -6,7 +6,7 @@ StructuredBuffer<float3> _Attractors;
 uint _PointCount;
 
 
-float _Time, _R, _DeltaTime;
+float _Time, _R, _RScale, _DeltaTime, _Size;
 
 float hash(uint n) {
     // integer hash copied from Hugo Elias
@@ -29,9 +29,9 @@ void ChaosGame(uint3 id : SV_DispatchThreadID) {
     float rand = hash(seed);
     uint index = floor(rand * _PointCount);
 
-    float3 attractor = _Attractors[index];
+    float3 attractor = _Attractors[index] * _Size;
 
-    float3 newPosition = (currentPos + attractor) * _R;
+    float3 newPosition = (currentPos + attractor) * _R * _RScale;
 
     _PositionBuffer[id.x] = newPosition;
 }
