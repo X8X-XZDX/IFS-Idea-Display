@@ -10,7 +10,8 @@ public class ParticleInstancer : MonoBehaviour {
         Custom = 1,
         SierpinskiTriangle2D,
         Vicsek2D,
-        SierpinskiCarpet2D
+        SierpinskiCarpet2D,
+        SierpinskiTriangle3D
     } public Attractor attractor = Attractor.SierpinskiTriangle2D;
     private Attractor cachedAttractor;
 
@@ -40,7 +41,7 @@ public class ParticleInstancer : MonoBehaviour {
 
     private Vector3[] customAttractorPositions;
 
-    private Vector3[] sierpinskiTriangle2DAttractors = {
+    private Vector3[] SierpinskiTriangle2DAttractors = {
         new Vector3(-0.5f, -0.5f, 0.0f),
         new Vector3(0.0f, 0.36f, 0.0f),
         new Vector3(0.5f, -0.5f, 0.0f)
@@ -63,6 +64,15 @@ public class ParticleInstancer : MonoBehaviour {
         new Vector3(0.5f, 0.0f, 0.0f),
         new Vector3(0.0f, 0.5f, 0.0f),
         new Vector3(0.0f, -0.5f, 0.0f)
+    };
+
+    private Vector3[] SierpinskiTriangle3DAttractors = {
+        new Vector3(-0.5f, -0.5f, 0.5f),
+        new Vector3(-0.5f, -0.5f, -0.5f),
+        new Vector3(0.5f, -0.5f, 0.5f),
+        new Vector3(0.5f, -0.5f, -0.5f),
+        new Vector3(0.0f, 0.36f, 0.0f),
+        new Vector3(0.5f, -0.5f, 0.0f)
     };
 
     private RenderParams renderParams;
@@ -136,8 +146,8 @@ public class ParticleInstancer : MonoBehaviour {
                 particleUpdater.SetFloat("_R", r);
             break;
             case Attractor.SierpinskiTriangle2D:
-                attractorsBuffer.SetData(sierpinskiTriangle2DAttractors);
-                particleUpdater.SetInt("_PointCount", sierpinskiTriangle2DAttractors.Length);
+                attractorsBuffer.SetData(SierpinskiTriangle2DAttractors);
+                particleUpdater.SetInt("_PointCount", SierpinskiTriangle2DAttractors.Length);
                 particleUpdater.SetFloat("_R", 0.5f);
             break;
             case Attractor.Vicsek2D:
@@ -149,6 +159,11 @@ public class ParticleInstancer : MonoBehaviour {
                 attractorsBuffer.SetData(SierpinskiCarpet2DAttractors);
                 particleUpdater.SetInt("_PointCount", SierpinskiCarpet2DAttractors.Length);
                 particleUpdater.SetFloat("_R", 0.33f);
+            break;
+            case Attractor.SierpinskiTriangle3D:
+                attractorsBuffer.SetData(SierpinskiTriangle3DAttractors);
+                particleUpdater.SetInt("_PointCount", SierpinskiTriangle3DAttractors.Length);
+                particleUpdater.SetFloat("_R", 0.5f);
             break;
         }
 

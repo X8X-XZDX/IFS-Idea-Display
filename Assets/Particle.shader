@@ -47,7 +47,9 @@ Shader "Custom/Particle" {
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
 
-				return float4(saturate(i.worldPos.x * 5) * 0.5f + 0.5f, saturate(i.worldPos.y * 5) * 0.5f + 0.5f, saturate(i.worldPos.z * 5) * 0.5f + 0.5f, 1);
+				col = pow(saturate(length(i.worldPos - float3(0, -0.5f, 0))), 5.0f);
+
+				return float4(col, 1);
 			}
 
 			ENDCG
