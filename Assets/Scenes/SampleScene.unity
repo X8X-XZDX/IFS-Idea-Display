@@ -312,6 +312,12 @@ MonoBehaviour:
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   attractor: 1
   r: 0.5
+  rScale: 1
+  size: 1
+  speed: 1
+  manual: 0
+  maxGenerations: 10
+  iterationCount: 1
 --- !u!4 &930339297
 Transform:
   m_ObjectHideFlags: 0
@@ -380,7 +386,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 60
   orthographic: 0

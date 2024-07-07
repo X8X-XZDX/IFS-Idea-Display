@@ -11,7 +11,8 @@ public class ParticleInstancer : MonoBehaviour {
         SierpinskiTriangle2D,
         Vicsek2D,
         SierpinskiCarpet2D,
-        SierpinskiTriangle3D
+        SierpinskiTriangle3D,
+        Vicsek3D
     } public Attractor attractor = Attractor.SierpinskiTriangle2D;
     private Attractor cachedAttractor;
 
@@ -73,6 +74,18 @@ public class ParticleInstancer : MonoBehaviour {
         new Vector3(0.5f, -0.5f, -0.5f),
         new Vector3(0.0f, 0.36f, 0.0f),
         new Vector3(0.5f, -0.5f, 0.0f)
+    };
+
+    private Vector3[] Vicsek3DAttractors = {
+        new Vector3(-0.5f, -0.5f, -0.5f),
+        new Vector3(-0.5f, -0.5f, 0.5f),
+        new Vector3(0.5f, -0.5f, -0.5f),
+        new Vector3(0.5f, -0.5f, 0.5f),
+        new Vector3(-0.5f, 0.5f, -0.5f),
+        new Vector3(-0.5f, 0.5f, 0.5f),
+        new Vector3(0.5f, 0.5f, -0.5f),
+        new Vector3(0.5f, 0.5f, 0.5f),
+        new Vector3(0.0f, 0.0f, 0.0f)
     };
 
     private RenderParams renderParams;
@@ -164,6 +177,11 @@ public class ParticleInstancer : MonoBehaviour {
                 attractorsBuffer.SetData(SierpinskiTriangle3DAttractors);
                 particleUpdater.SetInt("_PointCount", SierpinskiTriangle3DAttractors.Length);
                 particleUpdater.SetFloat("_R", 0.5f);
+            break;
+            case Attractor.Vicsek3D:
+                attractorsBuffer.SetData(Vicsek3DAttractors);
+                particleUpdater.SetInt("_PointCount", Vicsek3DAttractors.Length);
+                particleUpdater.SetFloat("_R", 0.33f);
             break;
         }
 

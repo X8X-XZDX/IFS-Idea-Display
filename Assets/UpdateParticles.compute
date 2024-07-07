@@ -32,6 +32,6 @@ void ChaosGame(uint3 id : SV_DispatchThreadID) {
     float3 attractor = _Attractors[index] * _Size;
 
     float3 newPosition = (currentPos + attractor) * _R * _RScale;
-
+    
     _PositionBuffer[id.x] = newPosition;
 }
