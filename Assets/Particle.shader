@@ -47,11 +47,14 @@ Shader "Custom/Particle" {
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
 
-				col.r = abs(i.worldPos.x);
-				col.g = abs(i.worldPos.y);
+				i.worldPos *= 0.1f;
+
+				col.r = abs(sin(i.worldPos.x));
+				col.g = abs(sin(i.worldPos.y));
 				col.b = abs(i.worldPos.z);
 
-				col += 0.05f;
+				col *= 2.5f;
+				col += 0.15f;
 
 				return float4(col, 1);
 			}

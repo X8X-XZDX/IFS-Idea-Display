@@ -1,5 +1,6 @@
 #pragma kernel InitializeParticles
 #pragma kernel ChaosGame
+#pragma kernel BourkeIFS
 
 RWStructuredBuffer<float4> _PositionBuffer;
 StructuredBuffer<float3> _Attractors;
@@ -41,7 +42,33 @@ void ChaosGame(uint3 id : SV_DispatchThreadID) {
     _PositionBuffer[id.x] = float4(newPosition, index);
 }
 
+struct IFSParameters {
+    float a;
+    float b;
+    float c;
+    float d;
+    float e;
+    float f;
+};
+
+StructuredBuffer<IFSParameters> _BourkeAttractors;
+
 [numthreads(8, 1, 1)] 
 void BourkeIFS(uint3 id : SV_DispatchThreadID) {
-    
+    float4 currentPos = _PositionBuffer[id.x];
+
+    uint seed = (currentPos.w + 1) * id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
+
+    float rand = hash(seed);
+    uint index = floor(rand * _PointCount);
+
+    IFSParameters params = _BourkeAttractors[index];
+
+    float3 newPosition;
+    newPosition.x = params.a * currentPos.x + params.b * currentPos.y + params.e;
+    newPosition.y = params.c * currentPos.x + params.d * currentPos.y + params.f;
+    newPosition.z = 0.0f;
+    // float3 newPosition = (currentPos.xyz + float3(params.a, params.b, params.c)) * 0.5f;
+
+    _PositionBuffer[id.x] = float4(newPosition, index);
 }
