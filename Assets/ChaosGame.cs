@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ParticleInstancer : MonoBehaviour {
+public class ChaosGame : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
@@ -12,7 +12,8 @@ public class ParticleInstancer : MonoBehaviour {
         Vicsek2D,
         SierpinskiCarpet2D,
         SierpinskiTriangle3D,
-        Vicsek3D
+        Vicsek3D,
+        SierpinskiCarpet3D
     } public Attractor attractor = Attractor.SierpinskiTriangle2D;
     private Attractor cachedAttractor;
 
@@ -88,6 +89,29 @@ public class ParticleInstancer : MonoBehaviour {
         new Vector3(0.0f, 0.0f, 0.0f)
     };
 
+    private Vector3[] SierpinskiCarpet3DAttractors = {
+        new Vector3(-0.5f, -0.5f, -0.5f),
+        new Vector3(-0.5f, -0.5f, 0.5f),
+        new Vector3(0.5f, -0.5f, -0.5f),
+        new Vector3(0.5f, -0.5f, 0.5f),
+        new Vector3(-0.5f, 0.5f, -0.5f),
+        new Vector3(-0.5f, 0.5f, 0.5f),
+        new Vector3(0.5f, 0.5f, -0.5f),
+        new Vector3(0.5f, 0.5f, 0.5f),
+        new Vector3(-0.5f, 0.5f, 0.0f),
+        new Vector3(0.5f, 0.5f, 0.0f),
+        new Vector3(-0.5f, -0.5f, 0.0f),
+        new Vector3(0.5f, -0.5f, 0.0f),
+        new Vector3(0.0f, 0.5f, -0.5f),
+        new Vector3(0.0f, 0.5f, 0.5f),
+        new Vector3(0.0f, -0.5f, -0.5f),
+        new Vector3(0.0f, -0.5f, 0.5f),
+        new Vector3(-0.5f, 0.0f, -0.5f),
+        new Vector3(0.5f, 0.0f, 0.5f),
+        new Vector3(0.5f, 0.0f, -0.5f),
+        new Vector3(-0.5f, 0.0f, 0.5f)
+    };
+
     private RenderParams renderParams;
 
     private ComputeBuffer attractorsBuffer;
@@ -100,8 +124,8 @@ public class ParticleInstancer : MonoBehaviour {
     void OnEnable() {
         particleMaterial = new Material(particleShader);
 
-        originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
-        destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
+        destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
 
         commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
         commandData = new GraphicsBuffer.IndirectDrawArgs[1];
@@ -181,6 +205,11 @@ public class ParticleInstancer : MonoBehaviour {
             case Attractor.Vicsek3D:
                 attractorsBuffer.SetData(Vicsek3DAttractors);
                 particleUpdater.SetInt("_PointCount", Vicsek3DAttractors.Length);
+                particleUpdater.SetFloat("_R", 0.33f);
+            break;
+            case Attractor.SierpinskiCarpet3D:
+                attractorsBuffer.SetData(SierpinskiCarpet3DAttractors);
+                particleUpdater.SetInt("_PointCount", SierpinskiCarpet3DAttractors.Length);
                 particleUpdater.SetFloat("_R", 0.33f);
             break;
         }

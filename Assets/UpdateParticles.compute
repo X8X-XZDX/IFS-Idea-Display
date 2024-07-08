@@ -1,7 +1,7 @@
 #pragma kernel InitializeParticles
 #pragma kernel ChaosGame
 
-RWStructuredBuffer<float3> _PositionBuffer;
+RWStructuredBuffer<float4> _PositionBuffer;
 StructuredBuffer<float3> _Attractors;
 uint _PointCount;
 
@@ -15,23 +15,33 @@ float hash(uint n) {
     return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 }
 
-[numthreads(8,8,1)]
+[numthreads(8,1,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
     _PositionBuffer[id.x] = 0;
 }
 
-[numthreads(8,8,1)]
+[numthreads(8,1,1)]
 void ChaosGame(uint3 id : SV_DispatchThreadID) {
-    float3 currentPos = _PositionBuffer[id.x];
+    float4 currentPos = _PositionBuffer[id.x];
 
-    uint seed = id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
+    uint seed = (currentPos.w + 1) * id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
 
     float rand = hash(seed);
     uint index = floor(rand * _PointCount);
 
+    // if (index == currentPos.w - 1) {
+    //     rand = hash(seed + 1);
+    //     index = floor(rand * _PointCount);
+    // }
+
     float3 attractor = _Attractors[index] * _Size;
 
-    float3 newPosition = (currentPos + attractor) * _R * _RScale;
+    float3 newPosition = (currentPos.xyz + attractor) * _R * _RScale;
+
+    _PositionBuffer[id.x] = float4(newPosition, index);
+}
+
+[numthreads(8, 1, 1)] 
+void BourkeIFS(uint3 id : SV_DispatchThreadID) {
     
-    _PositionBuffer[id.x] = newPosition;
 }
