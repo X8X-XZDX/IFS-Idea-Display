@@ -6,28 +6,6 @@ public class BourkeIFS : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
-    struct IFSParameters {
-        public float a;
-        public float b;
-        public float c;
-        public float d;
-        public float e;
-        public float f;
-    };
-
-    IFSParameters CreateParams(float x, float y, float z, float w, float v, float u) {
-        IFSParameters ifs = new IFSParameters();
-
-        ifs.a = x;
-        ifs.b = y;
-        ifs.c = z;
-        ifs.d = w;
-        ifs.e = v;
-        ifs.f = u;
-
-        return ifs;
-    }
-
     public enum Attractor {
         Custom = 1,
         SierpinskiTriangle2D,
@@ -94,13 +72,29 @@ public class BourkeIFS : MonoBehaviour {
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
         
-        IFSParameters[] customAttractorPositions = new IFSParameters[4];
-        customAttractorPositions[0] = CreateParams(0.14f, 0.01f, 0.0f, 0.51f, -0.08f, -1.31f);
-        customAttractorPositions[1] = CreateParams(0.43f, 0.52f, -0.45f, 0.5f, 1.49f, -0.75f);
-        customAttractorPositions[2] = CreateParams(0.45f, -0.49f, 0.47f, 0.47f, -1.62f, -0.74f);
-        customAttractorPositions[3] = CreateParams(0.49f, 0.0f, 0.0f, 0.51f, 0.02f, 1.62f);
+        Matrix4x4[] customAttractorPositions = new Matrix4x4[4];
+        customAttractorPositions[0].SetRow(0, new Vector4(0.14f, 0.01f, 0.0f, -0.08f));
+        customAttractorPositions[0].SetRow(1, new Vector4(0.0f, 0.51f, 0.0f, -1.31f));
+        customAttractorPositions[0].SetRow(2, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        customAttractorPositions[0].SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        customAttractorPositions[1].SetRow(0, new Vector4(0.43f, 0.52f, 0.0f, 1.49f));
+        customAttractorPositions[1].SetRow(1, new Vector4(-0.45f, 0.5f, 0.0f, -0.75f));
+        customAttractorPositions[1].SetRow(2, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        customAttractorPositions[1].SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        customAttractorPositions[2].SetRow(0, new Vector4(0.45f, -0.49f, 0.0f, -1.62f));
+        customAttractorPositions[2].SetRow(1, new Vector4(0.47f, 0.47f, 0.0f, -0.74f));
+        customAttractorPositions[2].SetRow(2, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        customAttractorPositions[2].SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        customAttractorPositions[3].SetRow(0, new Vector4(0.49f, 0.0f, 0.0f, 0.02f));
+        customAttractorPositions[3].SetRow(1, new Vector4(0.0f, 0.51f, 0.0f, 1.62f));
+        customAttractorPositions[3].SetRow(2, new Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        customAttractorPositions[3].SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+
         
-        attractorsBuffer = new ComputeBuffer(4, System.Runtime.InteropServices.Marshal.SizeOf(typeof(IFSParameters)));
+        attractorsBuffer = new ComputeBuffer(4, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
         attractorsBuffer.SetData(customAttractorPositions);
 
         // Vector3[] data = new Vector3[attractorTransforms.Count];
