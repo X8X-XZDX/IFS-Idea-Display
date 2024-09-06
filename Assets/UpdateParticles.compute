@@ -18,9 +18,18 @@ float hash(uint n) {
     return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 }
 
+float3 to3D(uint idx) {
+    uint3 voxelRes = 58;
+    uint x = idx % (voxelRes.x);
+    uint y = (idx / voxelRes.x) % voxelRes.y;
+    uint z = idx / (voxelRes.x * voxelRes.y);
+
+    return float3(x, y, z);
+}
+
 [numthreads(8,1,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
-    _PositionBuffer[id.x] = 0;
+    _PositionBuffer[id.x] = float4(to3D(id.x) * 0.025, 1);
 }
 
 [numthreads(8,1,1)]

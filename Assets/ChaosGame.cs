@@ -126,9 +126,11 @@ public class ChaosGame : MonoBehaviour {
 
     private uint particleCount = 200000;
 
-    public List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
+    private AffineTransformations affineTransformations;
 
     void OnEnable() {
+        affineTransformations = GetComponent<AffineTransformations>();
+
         particleMaterial = new Material(particleShader);
 
         originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
@@ -271,9 +273,9 @@ public class ChaosGame : MonoBehaviour {
             new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
         );
 
-        particleUpdater.SetInt("_TransformationCount", affineTransforms.Count);
+        particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
 
-        attractorsBuffer.SetData(affineTransforms.ToArray());
+        attractorsBuffer.SetData(affineTransformations.GetTransformData());
 
         if (uncapped) {
             currentGen = 0;
