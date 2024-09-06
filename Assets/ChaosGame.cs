@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ChaosGame : MonoBehaviour {
+    public bool usePoints = false;
+    public Mesh particleMesh;
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
@@ -42,6 +44,7 @@ public class ChaosGame : MonoBehaviour {
 
     private GraphicsBuffer commandBuffer, originBuffer, destinationBuffer;
     private GraphicsBuffer.IndirectDrawArgs[] commandData;
+    private GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
 
     private Vector3[] customAttractorPositions;
 
@@ -131,19 +134,29 @@ public class ChaosGame : MonoBehaviour {
         originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
         destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
 
-        commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
-        commandData = new GraphicsBuffer.IndirectDrawArgs[1];
+        if (usePoints) {
+            commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
+            commandData = new GraphicsBuffer.IndirectDrawArgs[1];
+            commandData[0].instanceCount = particleCount;
+            commandData[0].vertexCountPerInstance = 1;
+
+            commandBuffer.SetData(commandData);
+        } else {
+            commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+            commandIndexedData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
+            commandIndexedData[0].instanceCount = particleCount;
+            commandIndexedData[0].indexCountPerInstance = particleMesh.GetIndexCount(0);
+
+            commandBuffer.SetData(commandIndexedData);
+        }
+
 
         renderParams = new RenderParams(particleMaterial);
         renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
         renderParams.matProps = new MaterialPropertyBlock();
-        commandData[0].instanceCount = particleCount;
-        commandData[0].vertexCountPerInstance = 1;
 
         renderParams.matProps.SetBuffer("_Origins", originBuffer);
         renderParams.matProps.SetBuffer("_Destinations", destinationBuffer);
-
-        commandBuffer.SetData(commandData);
 
         particleUpdater.SetBuffer(0, "_PositionBuffer", originBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
@@ -155,7 +168,7 @@ public class ChaosGame : MonoBehaviour {
         attractorTransforms.RemoveAt(0);
 
         Matrix4x4[] customAttractorPositions = new Matrix4x4[4];
-        attractorsBuffer = new ComputeBuffer(4, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
+        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
         attractorsBuffer.SetData(customAttractorPositions);
 
         UpdateAttractor();
@@ -279,7 +292,10 @@ public class ChaosGame : MonoBehaviour {
         }
 
         renderParams.matProps.SetFloat("_Interpolator", 1);
-        Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
+        if (usePoints)
+            Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
+        else
+            Graphics.RenderMeshIndirect(renderParams, particleMesh, commandBuffer, 1);
     }
 
     void OnDisable() {
