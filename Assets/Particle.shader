@@ -24,6 +24,7 @@ Shader "Custom/Particle" {
 			struct v2f {
 				float4 pos : SV_POSITION;
 				float3 worldPos : TEXCOORD0;
+				int generation : TEXCOORD1;
 			};
 
 			StructuredBuffer<float4> _Origins, _Destinations;
@@ -35,11 +36,19 @@ Shader "Custom/Particle" {
 				v2f i;
 				
 				uint instanceID = GetIndirectInstanceID(svInstanceID);
+
+
 				
-				float4 pos = float4(lerp(_Origins[svInstanceID].xyz, _Destinations[svInstanceID].xyz, _Interpolator), v.vertex.a);
+				// float4 pos = float4(lerp(_Origins[svInstanceID].xyz, _Destinations[svInstanceID].xyz, _Interpolator), v.vertex.a);
+
+				float4 origin = _Origins[floor(max(0, svInstanceID - 1) / 4)];
+				float4 destination = _Origins[svInstanceID];
+
+				float4 pos = float4(lerp(origin.xyz, destination.xyz, _Interpolator), v.vertex.a);
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
+				i.generation = length(origin.xyz - destination.xyz);
 
 				return i;
 			}

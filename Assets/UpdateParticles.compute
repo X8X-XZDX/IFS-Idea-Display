@@ -1,6 +1,8 @@
 #pragma kernel InitializeParticles
 #pragma kernel ChaosGame
-#pragma kernel BourkeIFS
+#pragma kernel BourkeIFSChaos
+#pragma kernel BourkeIFSIterated
+#pragma kernel AffineTransformChaos
 
 RWStructuredBuffer<float4> _PositionBuffer;
 StructuredBuffer<float3> _Attractors;
@@ -45,7 +47,7 @@ void ChaosGame(uint3 id : SV_DispatchThreadID) {
 StructuredBuffer<float4x4> _BourkeAttractors;
 
 [numthreads(8, 1, 1)] 
-void BourkeIFS(uint3 id : SV_DispatchThreadID) {
+void BourkeIFSChaos(uint3 id : SV_DispatchThreadID) {
     float4 currentPos = _PositionBuffer[id.x];
 
     uint seed = (currentPos.w + 1) * id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
@@ -54,6 +56,48 @@ void BourkeIFS(uint3 id : SV_DispatchThreadID) {
     uint index = floor(rand * _PointCount);
 
     float4x4 attractor = _BourkeAttractors[index];
+
+    float4 newPosition = float4(currentPos.xyz, 1.0f);
+    newPosition = mul(attractor, newPosition);
+
+    _PositionBuffer[id.x] = float4(newPosition.xyz, index);
+}
+
+uint _Offset, _Generation, _ParticleCount;
+
+[numthreads(8, 1, 1)] 
+void BourkeIFSIterated(uint3 id : SV_DispatchThreadID) {
+    uint offsetIndex = id.x + _Offset;
+
+    if (offsetIndex > _ParticleCount) return;
+
+    uint originIndex = floor(offsetIndex / _PointCount);
+
+    float4 origin = _PositionBuffer[originIndex];
+
+    uint index = id.x % _PointCount;
+
+    float4x4 attractor = _BourkeAttractors[index];
+
+    float4 newPosition = float4(origin.xyz, 1.0f);
+    newPosition = mul(attractor, newPosition);
+
+    _PositionBuffer[offsetIndex] = float4(newPosition.xyz, _Generation);
+}
+
+StructuredBuffer<float4x4> _Transformations;
+int _TransformationCount, _Seed;
+
+[numthreads(8, 1, 1)] 
+void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
+    float4 currentPos = _PositionBuffer[id.x];
+
+    uint seed = _Seed + id.x + (currentPos.w + 1) + ceil(dot(currentPos.xyz, float3(1103, 1072, 947)));
+
+    float rand = hash(seed);
+    uint index = floor(rand * _TransformationCount);
+
+    float4x4 attractor = _Transformations[index];
 
     float4 newPosition = float4(currentPos.xyz, 1.0f);
     newPosition = mul(attractor, newPosition);

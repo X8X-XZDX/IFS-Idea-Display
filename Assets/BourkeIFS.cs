@@ -17,7 +17,7 @@ public class BourkeIFS : MonoBehaviour {
     } public Attractor attractor = Attractor.SierpinskiTriangle2D;
     private Attractor cachedAttractor;
 
-    [Range(0.0f, 5.0f)]
+    [Range(0.0f, 1.0f)]
     public float size = 1.0f;
 
     [Range(0.0f, 20.0f)]
@@ -42,35 +42,12 @@ public class BourkeIFS : MonoBehaviour {
     private ComputeBuffer attractorsBuffer;
 
     private float t = 0.0f;
-    private int currentGen = 0;
+    private int currentGen = 1;
 
-    private uint particleCount = 200000;
+    private int maxParticleCount, currentParticleCount;
 
     void OnEnable() {
         particleMaterial = new Material(particleShader);
-
-        originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
-        destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
-
-        commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
-        commandData = new GraphicsBuffer.IndirectDrawArgs[1];
-
-        renderParams = new RenderParams(particleMaterial);
-        renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
-        renderParams.matProps = new MaterialPropertyBlock();
-        commandData[0].instanceCount = particleCount;
-        commandData[0].vertexCountPerInstance = 1;
-
-        renderParams.matProps.SetBuffer("_Origins", originBuffer);
-        renderParams.matProps.SetBuffer("_Destinations", destinationBuffer);
-
-        commandBuffer.SetData(commandData);
-
-        particleUpdater.SetBuffer(0, "_PositionBuffer", originBuffer);
-        particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
-        particleUpdater.SetBuffer(0, "_PositionBuffer", destinationBuffer);
-        particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
-
         
         Matrix4x4[] customAttractorPositions = new Matrix4x4[4];
         customAttractorPositions[0].SetRow(0, new Vector4(0.14f, 0.01f, 0.0f, -0.08f));
@@ -97,6 +74,44 @@ public class BourkeIFS : MonoBehaviour {
         attractorsBuffer = new ComputeBuffer(4, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
         attractorsBuffer.SetData(customAttractorPositions);
 
+        int particleSum = 0;
+
+        for (int gen = 0; gen < maxGenerations; ++gen) {
+            int partitionSize = (int)Mathf.Pow(customAttractorPositions.Length, gen);
+            Debug.Log("Generation: " + gen.ToString() + " Space Needed: " + partitionSize.ToString() + " Space Used: " + particleSum.ToString());
+            particleSum += (int)Mathf.Pow(customAttractorPositions.Length, gen);
+
+        }
+
+        Debug.Log("Space needed for " + maxGenerations.ToString() + " generations: " + particleSum.ToString());
+
+        maxParticleCount = particleSum;
+
+        originBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopyDestination, (int)maxParticleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
+        destinationBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.CopySource, (int)maxParticleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
+
+        commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
+        commandData = new GraphicsBuffer.IndirectDrawArgs[1];
+
+        renderParams = new RenderParams(particleMaterial);
+        renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
+        renderParams.matProps = new MaterialPropertyBlock();
+        commandData[0].instanceCount = (uint)maxParticleCount;
+        commandData[0].vertexCountPerInstance = 1;
+
+        renderParams.matProps.SetBuffer("_Origins", originBuffer);
+        renderParams.matProps.SetBuffer("_Destinations", destinationBuffer);
+
+        commandBuffer.SetData(commandData);
+
+        particleUpdater.SetBuffer(0, "_PositionBuffer", originBuffer);
+        particleUpdater.Dispatch(0, Mathf.CeilToInt(maxParticleCount / 8.0f), 1, 1);
+        particleUpdater.SetBuffer(0, "_PositionBuffer", destinationBuffer);
+        particleUpdater.Dispatch(0, Mathf.CeilToInt(maxParticleCount / 8.0f), 1, 1);
+
+        currentParticleCount = 1;
+        currentGen = 1;
+
         // Vector3[] data = new Vector3[attractorTransforms.Count];
         // attractorsBuffer.GetData(data);
 
@@ -105,7 +120,6 @@ public class BourkeIFS : MonoBehaviour {
         // }
 
         t = 0;
-        currentGen = 0;
     }
 
     void UpdateAttractor() {
@@ -118,19 +132,46 @@ public class BourkeIFS : MonoBehaviour {
     }
 
     void IterateSystem() {
-        Graphics.CopyBuffer(destinationBuffer, originBuffer);
+        // Graphics.CopyBuffer(destinationBuffer, originBuffer);
 
-        for (int i = 0; i < iterationCount; ++i) {
-            particleUpdater.SetFloat("_Size", size);
-            particleUpdater.SetInt("_PointCount", 4);
-            particleUpdater.SetBuffer(2, "_PositionBuffer", destinationBuffer);
-            particleUpdater.SetBuffer(2, "_BourkeAttractors", attractorsBuffer);
-            particleUpdater.Dispatch(2, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+        // for (int i = 0; i < iterationCount; ++i) {
+        //     particleUpdater.SetFloat("_Size", size);
+        //     particleUpdater.SetInt("_PointCount", 4);
+        //     particleUpdater.SetBuffer(2, "_PositionBuffer", destinationBuffer);
+        //     particleUpdater.SetBuffer(2, "_BourkeAttractors", attractorsBuffer);
+        //     particleUpdater.Dispatch(2, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
-            currentGen += 1;
-        }
+        //     currentGen += 1;
+        // }
+
+        if (currentGen >= maxGenerations) return;
+
+        int previousParticleCount = currentParticleCount;
+
+        currentParticleCount += (int)Mathf.Pow(4, currentGen);
+
+        particleUpdater.SetInt("_PointCount", 4);
+        particleUpdater.SetInt("_Offset", (int)previousParticleCount);
+        particleUpdater.SetInt("_Generation", (int)currentGen);
+        particleUpdater.SetInt("_ParticleCount", (int)currentParticleCount);
+        particleUpdater.SetBuffer(3, "_PositionBuffer", originBuffer);
+        particleUpdater.SetBuffer(3, "_BourkeAttractors", attractorsBuffer);
+
+        int threadCount = Mathf.CeilToInt(currentParticleCount / 8.0f);
+        particleUpdater.Dispatch(3, threadCount, 1, 1);
+
+        // Debug.Log("Generation: " + currentGen.ToString());
+        // Debug.Log("Memory Offset: " + previousParticleCount.ToString());
+        // Debug.Log("Memory Use: " + currentParticleCount.ToString());
+        // Vector4[] data = new Vector4[maxParticleCount];
+        // originBuffer.GetData(data);
+        // for (int i = 0; i < currentParticleCount; ++i) {
+        //     Debug.Log(data[i]);
+        // }
 
         t = 0;
+        
+        currentGen += 1;
     }
 
     void Update() {
@@ -138,14 +179,12 @@ public class BourkeIFS : MonoBehaviour {
         particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
 
         if (attractor != cachedAttractor) {
-            currentGen = 0;
+            // currentGen = 0;
             UpdateAttractor();
         }
 
         if (t <= 1.0f)
             t += Time.deltaTime * speed;
-
-        if ( currentGen >= maxGenerations && !pauseAtTop) t = 1.0f;
 
         if (manual) {
             if (Input.GetKeyDown("space")) {
@@ -155,7 +194,11 @@ public class BourkeIFS : MonoBehaviour {
             IterateSystem();
         }
 
-        renderParams.matProps.SetFloat("_Interpolator", t);
+        renderParams.matProps.SetFloat("_Interpolator", size);
+        
+        commandData[0].instanceCount = (uint)currentParticleCount;
+
+        commandBuffer.SetData(commandData);
         Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
     }
 

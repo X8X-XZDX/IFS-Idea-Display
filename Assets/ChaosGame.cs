@@ -36,6 +36,8 @@ public class ChaosGame : MonoBehaviour {
     [Range(1, 20)]
     public int iterationCount = 1;
 
+    public bool uncapped = false;
+
     private Material particleMaterial;
 
     private GraphicsBuffer commandBuffer, originBuffer, destinationBuffer;
@@ -121,6 +123,8 @@ public class ChaosGame : MonoBehaviour {
 
     private uint particleCount = 200000;
 
+    public List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
+
     void OnEnable() {
         particleMaterial = new Material(particleShader);
 
@@ -150,8 +154,8 @@ public class ChaosGame : MonoBehaviour {
         GetComponentsInChildren<Transform>(attractorTransforms);
         attractorTransforms.RemoveAt(0);
 
-        customAttractorPositions = new Vector3[32];
-        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector3)));
+        Matrix4x4[] customAttractorPositions = new Matrix4x4[4];
+        attractorsBuffer = new ComputeBuffer(4, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
         attractorsBuffer.SetData(customAttractorPositions);
 
         UpdateAttractor();
@@ -168,51 +172,9 @@ public class ChaosGame : MonoBehaviour {
     }
 
     void UpdateAttractor() {
-        switch(attractor) {
-            case Attractor.Custom:
-                List<Transform> attractorTransforms = new List<Transform>();
-                GetComponentsInChildren<Transform>(attractorTransforms);
-                attractorTransforms.RemoveAt(0);
+        // switch(attractor) {
 
-                for (int i = 0; i < attractorTransforms.Count; ++i) {
-                    customAttractorPositions[i] = attractorTransforms[i].position;
-                }
-                
-                attractorsBuffer.SetData(customAttractorPositions);
-                particleUpdater.SetInt("_PointCount", attractorTransforms.Count);
-                particleUpdater.SetFloat("_R", r);
-            break;
-            case Attractor.SierpinskiTriangle2D:
-                attractorsBuffer.SetData(SierpinskiTriangle2DAttractors);
-                particleUpdater.SetInt("_PointCount", SierpinskiTriangle2DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.5f);
-            break;
-            case Attractor.Vicsek2D:
-                attractorsBuffer.SetData(Vicsek2DAttractors);
-                particleUpdater.SetInt("_PointCount", Vicsek2DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.33f);
-            break;
-            case Attractor.SierpinskiCarpet2D:
-                attractorsBuffer.SetData(SierpinskiCarpet2DAttractors);
-                particleUpdater.SetInt("_PointCount", SierpinskiCarpet2DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.33f);
-            break;
-            case Attractor.SierpinskiTriangle3D:
-                attractorsBuffer.SetData(SierpinskiTriangle3DAttractors);
-                particleUpdater.SetInt("_PointCount", SierpinskiTriangle3DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.5f);
-            break;
-            case Attractor.Vicsek3D:
-                attractorsBuffer.SetData(Vicsek3DAttractors);
-                particleUpdater.SetInt("_PointCount", Vicsek3DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.33f);
-            break;
-            case Attractor.SierpinskiCarpet3D:
-                attractorsBuffer.SetData(SierpinskiCarpet3DAttractors);
-                particleUpdater.SetInt("_PointCount", SierpinskiCarpet3DAttractors.Length);
-                particleUpdater.SetFloat("_R", 0.33f);
-            break;
-        }
+        // }
 
         cachedAttractor = attractor;
     }
@@ -222,16 +184,24 @@ public class ChaosGame : MonoBehaviour {
             Graphics.CopyBuffer(destinationBuffer, originBuffer);
 
             for (int i = 0; (i < iterationCount) && (currentGen < maxGenerations); ++i) {
+                particleUpdater.SetInt("_Seed", Mathf.CeilToInt(Random.Range(1, 1000000)));
                 particleUpdater.SetFloat("_Size", size);
                 particleUpdater.SetFloat("_RScale", rScale);
-                particleUpdater.SetBuffer(1, "_PositionBuffer", destinationBuffer);
-                particleUpdater.SetBuffer(1, "_Attractors", attractorsBuffer);
-                particleUpdater.Dispatch(1, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+                particleUpdater.SetBuffer(4, "_PositionBuffer", destinationBuffer);
+                particleUpdater.SetBuffer(4, "_Transformations", attractorsBuffer);
+                particleUpdater.Dispatch(4, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
                 currentGen += 1;
             }
 
             t = 0;
         }
+    }
+
+    void FillAffineTransform(ref Matrix4x4 matrix, Vector4 r1, Vector4 r2, Vector4 r3) {
+        matrix.SetRow(0, r1);
+        matrix.SetRow(1, r2);
+        matrix.SetRow(2, r3);
+        matrix.SetRow(3, new Vector4(0, 0, 0, 1));
     }
 
     void Update() {
@@ -246,18 +216,69 @@ public class ChaosGame : MonoBehaviour {
             UpdateAttractor();
         }
 
-        if (t <= 1)
-            t += Time.deltaTime * speed;
+        Matrix4x4[] customAttractorPositions = new Matrix4x4[4];
 
-        if (manual) {
-            if (Input.GetKeyDown("space")) {
+        // FillAffineTransform(ref customAttractorPositions[0], 
+        //     new Vector4(0.14f, 0.01f, 0.0f, -0.08f),
+        //     new Vector4(0.0f, 0.51f, 0.0f, -1.31f),
+        //     new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        // );
+        // FillAffineTransform(ref customAttractorPositions[1], 
+        //     new Vector4(0.43f, 0.52f, 0.0f, 1.49f),
+        //     new Vector4(-0.45f, 0.5f, 0.0f, -0.75f),
+        //     new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        // );
+        // FillAffineTransform(ref customAttractorPositions[2], 
+        //     new Vector4(0.45f, -0.49f, 0.0f, -1.62f),
+        //     new Vector4(0.47f, 0.47f, 0.0f, -0.74f),
+        //     new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        // );
+        // FillAffineTransform(ref customAttractorPositions[3], 
+        //     new Vector4(0.49f, 0.0f, 0.0f, 0.02f),
+        //     new Vector4(0.0f, 0.51f, 0.0f, 1.62f),
+        //     new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        // );
+
+        // particleUpdater.SetInt("_TransformationCount", 4);
+
+        
+        FillAffineTransform(ref customAttractorPositions[0], 
+            new Vector4(0.5f, 0.0f, 0.0f, -0.08f),
+            new Vector4(0.0f, 0.5f, 0.0f, 1.31f),
+            new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        );
+        FillAffineTransform(ref customAttractorPositions[1], 
+            new Vector4(0.5f, 0.0f, 0.0f, 1.49f),
+            new Vector4(0.0f, 0.5f, 0.0f, -0.75f),
+            new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        );
+        FillAffineTransform(ref customAttractorPositions[2], 
+            new Vector4(0.5f, 0.0f, 0.0f, -1.62f),
+            new Vector4(0.0f, 0.5f, 0.0f, -0.74f),
+            new Vector4(0.0f, 0.0f, 1.0f, 0.0f)
+        );
+
+        particleUpdater.SetInt("_TransformationCount", affineTransforms.Count);
+
+        attractorsBuffer.SetData(affineTransforms.ToArray());
+
+        if (uncapped) {
+            currentGen = 0;
+            IterateSystem();
+        } else {
+            if (t <= 1)
+                t += Time.deltaTime * speed;
+
+            if (manual) {
+                if (Input.GetKeyDown("space")) {
+                    IterateSystem();
+                }
+            } else if (t >= 1) {
                 IterateSystem();
             }
-        } else if (t >= 1) {
-            IterateSystem();
         }
 
-        renderParams.matProps.SetFloat("_Interpolator", t);
+        renderParams.matProps.SetFloat("_Interpolator", 1);
         Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
     }
 

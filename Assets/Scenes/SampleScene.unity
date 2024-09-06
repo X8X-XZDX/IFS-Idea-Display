@@ -289,6 +289,7 @@ GameObject:
   m_Component:
   - component: {fileID: 930339297}
   - component: {fileID: 930339296}
+  - component: {fileID: 930339298}
   m_Layer: 0
   m_Name: Particles
   m_TagString: Untagged
@@ -315,9 +316,59 @@ MonoBehaviour:
   rScale: 1
   size: 1
   speed: 1
-  manual: 0
-  maxGenerations: 10
+  manual: 1
+  maxGenerations: 26
   iterationCount: 1
+  uncapped: 0
+  affineTransforms:
+  - e00: 0.5
+    e01: 0
+    e02: 0
+    e03: -0.08
+    e10: 0
+    e11: 0.5
+    e12: 0
+    e13: 1.49
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  - e00: 0.5
+    e01: 0
+    e02: 0
+    e03: 1.49
+    e10: 0
+    e11: 0.5
+    e12: 0
+    e13: -0.75
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  - e00: 0.5
+    e01: 0
+    e02: 0
+    e03: -1.62
+    e10: 0
+    e11: 0.5
+    e12: 0
+    e13: -0.75
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
 --- !u!4 &930339297
 Transform:
   m_ObjectHideFlags: 0
@@ -336,6 +387,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &930339298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63728c4f8a141934aa18ccbf37b9160f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  particleShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
+  attractor: 1
+  size: 1
+  speed: 1
+  manual: 1
+  pauseAtTop: 0
+  maxGenerations: 10
+  iterationCount: 1
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
