@@ -32,6 +32,7 @@ Shader "Custom/DebugParticle" {
 
 			StructuredBuffer<float4> _Origins, _Destinations;
 			float _Interpolator;
+            float3 _Translate;
 
 			v2f vp(VertexData v, uint svInstanceID : SV_INSTANCEID) {
 				InitIndirectDrawArgs(0);
@@ -43,7 +44,7 @@ Shader "Custom/DebugParticle" {
 				float4 origin = _Origins[svInstanceID];
 				float4 destination = _Destinations[svInstanceID];
 
-				float4 pos = v.vertex * rcp(8.0f) + float4(lerp(origin.xyz, destination.xyz, _Interpolator), 0);
+				float4 pos = (v.vertex * rcp(8.0f) + float4(_Translate,0)) + float4(lerp(origin.xyz, destination.xyz, _Interpolator), 0);
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);

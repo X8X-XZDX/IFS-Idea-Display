@@ -7,6 +7,8 @@ public class DebugTransform : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
+    public Vector3 translate = new Vector3(0, 0, 0);
+
     public int debugIndex = 0;
 
     [Range(0, 1)]
@@ -91,7 +93,7 @@ public class DebugTransform : MonoBehaviour {
         }
 
         renderParams.matProps.SetFloat("_Interpolator", t);
-
+        renderParams.matProps.SetVector("_Translate", translate);
 
         Graphics.RenderMeshIndirect(renderParams, particleMesh, commandBuffer, 1);
     }
