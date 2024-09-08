@@ -141,6 +141,10 @@ public class ChaosGame : MonoBehaviour {
 
         renderParams.matProps.SetBuffer("_Positions", positionBuffer);
 
+        int cubeRootParticleCount = Mathf.CeilToInt(Mathf.Pow(particleCount, 1.0f / 3.0f));
+        particleUpdater.SetInt("_CubeResolution", cubeRootParticleCount);
+        particleUpdater.SetFloat("_CubeSize", 1.0f / cubeRootParticleCount);
+
         particleUpdater.SetBuffer(0, "_PositionBuffer", positionBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
 
@@ -151,9 +155,9 @@ public class ChaosGame : MonoBehaviour {
     void IterateSystem() {
         for (int i = 0; i < iterationCount; ++i) {
             particleUpdater.SetInt("_Seed", Mathf.CeilToInt(Random.Range(1, 1000000)));
-            particleUpdater.SetBuffer(4, "_PositionBuffer", positionBuffer);
-            particleUpdater.SetBuffer(4, "_Transformations", attractorsBuffer);
-            particleUpdater.Dispatch(4, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+            particleUpdater.SetBuffer(2, "_PositionBuffer", positionBuffer);
+            particleUpdater.SetBuffer(2, "_Transformations", attractorsBuffer);
+            particleUpdater.Dispatch(2, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
         }
     }
 
@@ -165,9 +169,6 @@ public class ChaosGame : MonoBehaviour {
     }
 
     void Update() {
-        particleUpdater.SetFloat("_Time", Time.time);
-        particleUpdater.SetFloat("_DeltaTime", Time.deltaTime);
-
         particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
 
         attractorsBuffer.SetData(affineTransformations.GetTransformData());

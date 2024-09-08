@@ -1,16 +1,13 @@
 #pragma kernel InitializeParticles
-#pragma kernel ChaosGame
-#pragma kernel BourkeIFSChaos
-#pragma kernel BourkeIFSIterated
-#pragma kernel AffineTransformChaos
 #pragma kernel ApplyDebugTransform
+#pragma kernel AffineTransformChaos
 
 RWStructuredBuffer<float4> _PositionBuffer;
-StructuredBuffer<float3> _Attractors;
-uint _PointCount;
 
+StructuredBuffer<float4x4> _Transformations;
 
-float _Time, _R, _RScale, _DeltaTime, _Size;
+uint _Seed, _TransformationCount, _DebugIndex, _CubeResolution;
+float _CubeSize;
 
 float hash(uint n) {
     // integer hash copied from Hugo Elias
@@ -18,9 +15,6 @@ float hash(uint n) {
     n = n * (n * n * 15731U + 0x789221U) + 0x1376312589U;
     return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 }
-
-uint _CubeResolution;
-float _CubeSize;
 
 float3 to3D(uint idx) {
     uint3 voxelRes = _CubeResolution;
@@ -36,70 +30,17 @@ void InitializeParticles(uint3 id : SV_DispatchThreadID) {
     _PositionBuffer[id.x] = float4(to3D(id.x) * _CubeSize, 1);
 }
 
-[numthreads(8,1,1)]
-void ChaosGame(uint3 id : SV_DispatchThreadID) {
-    float4 currentPos = _PositionBuffer[id.x];
-
-    uint seed = (currentPos.w + 1) * id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
-
-    float rand = hash(seed);
-    uint index = floor(rand * _PointCount);
-
-    // if (index == currentPos.w - 1) {
-    //     rand = hash(seed + 1);
-    //     index = floor(rand * _PointCount);
-    // }
-
-    float3 attractor = _Attractors[index] * _Size;
-
-    float3 newPosition = (currentPos.xyz + attractor) * _R * _RScale;
-
-    _PositionBuffer[id.x] = float4(newPosition, index);
-}
-
-StructuredBuffer<float4x4> _BourkeAttractors;
-
 [numthreads(8, 1, 1)] 
-void BourkeIFSChaos(uint3 id : SV_DispatchThreadID) {
+void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
     float4 currentPos = _PositionBuffer[id.x];
 
-    uint seed = (currentPos.w + 1) * id.x + currentPos.x * 1111 + currentPos.y * 1141 + currentPos.z * 1103;
-
-    float rand = hash(seed);
-    uint index = floor(rand * _PointCount);
-
-    float4x4 attractor = _BourkeAttractors[index];
+    float4x4 attractor = _Transformations[_DebugIndex];
 
     float4 newPosition = float4(currentPos.xyz, 1.0f);
     newPosition = mul(attractor, newPosition);
 
-    _PositionBuffer[id.x] = float4(newPosition.xyz, index);
+    _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }
-
-uint _Offset, _Generation, _ParticleCount;
-
-[numthreads(8, 1, 1)] 
-void BourkeIFSIterated(uint3 id : SV_DispatchThreadID) {
-    uint offsetIndex = id.x + _Offset;
-
-    if (offsetIndex > _ParticleCount) return;
-
-    uint originIndex = floor(offsetIndex / _PointCount);
-
-    float4 origin = _PositionBuffer[originIndex];
-
-    uint index = id.x % _PointCount;
-
-    float4x4 attractor = _BourkeAttractors[index];
-
-    float4 newPosition = float4(origin.xyz, 1.0f);
-    newPosition = mul(attractor, newPosition);
-
-    _PositionBuffer[offsetIndex] = float4(newPosition.xyz, _Generation);
-}
-
-StructuredBuffer<float4x4> _Transformations;
-int _TransformationCount, _Seed;
 
 [numthreads(8, 1, 1)] 
 void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
@@ -116,19 +57,4 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     newPosition = mul(attractor, newPosition);
 
     _PositionBuffer[id.x] = float4(newPosition.xyz, index);
-}
-
-
-int _DebugIndex;
-
-[numthreads(8, 1, 1)] 
-void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
-    float4 currentPos = _PositionBuffer[id.x];
-
-    float4x4 attractor = _Transformations[_DebugIndex];
-
-    float4 newPosition = float4(currentPos.xyz, 1.0f);
-    newPosition = mul(attractor, newPosition);
-
-    _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }

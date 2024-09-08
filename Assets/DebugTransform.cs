@@ -74,9 +74,9 @@ public class DebugTransform : MonoBehaviour {
         particleUpdater.Dispatch(0, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
 
         // Apply Debug Transform
-        particleUpdater.SetBuffer(5, "_Transformations", attractorsBuffer);
-        particleUpdater.SetBuffer(5, "_PositionBuffer", destinationBuffer);
-        particleUpdater.Dispatch(5, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
+        particleUpdater.SetBuffer(1, "_Transformations", attractorsBuffer);
+        particleUpdater.SetBuffer(1, "_PositionBuffer", destinationBuffer);
+        particleUpdater.Dispatch(1, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
 
         
         if (animate) {
