@@ -3,6 +3,7 @@
 #pragma kernel BourkeIFSChaos
 #pragma kernel BourkeIFSIterated
 #pragma kernel AffineTransformChaos
+#pragma kernel ApplyDebugTransform
 
 RWStructuredBuffer<float4> _PositionBuffer;
 StructuredBuffer<float3> _Attractors;
@@ -18,8 +19,11 @@ float hash(uint n) {
     return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 }
 
+uint _CubeResolution;
+float _CubeSize;
+
 float3 to3D(uint idx) {
-    uint3 voxelRes = 58;
+    uint3 voxelRes = _CubeResolution;
     uint x = idx % (voxelRes.x);
     uint y = (idx / voxelRes.x) % voxelRes.y;
     uint z = idx / (voxelRes.x * voxelRes.y);
@@ -29,7 +33,7 @@ float3 to3D(uint idx) {
 
 [numthreads(8,1,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
-    _PositionBuffer[id.x] = float4(to3D(id.x) * 0.025, 1);
+    _PositionBuffer[id.x] = float4(to3D(id.x) * _CubeSize, 1);
 }
 
 [numthreads(8,1,1)]
@@ -112,4 +116,19 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     newPosition = mul(attractor, newPosition);
 
     _PositionBuffer[id.x] = float4(newPosition.xyz, index);
+}
+
+
+int _DebugIndex;
+
+[numthreads(8, 1, 1)] 
+void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
+    float4 currentPos = _PositionBuffer[id.x];
+
+    float4x4 attractor = _Transformations[_DebugIndex];
+
+    float4 newPosition = float4(currentPos.xyz, 1.0f);
+    newPosition = mul(attractor, newPosition);
+
+    _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }
