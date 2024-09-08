@@ -8,8 +8,9 @@ public class AffineTransformations : MonoBehaviour {
     [Serializable]
     public struct TransformInstructions {
         public Vector3 scale;
-        public Vector3 squish;
-        public Vector3 sheer;
+        public Vector3 shearX;
+        public Vector3 shearY;
+        public Vector3 shearZ;
         public Vector3 rotate;
         public Vector3 translate;
     }
@@ -36,6 +37,36 @@ public class AffineTransformations : MonoBehaviour {
         return scaleMatrix;
     }
 
+    Matrix4x4 ShearX(Vector3 s) {
+        Matrix4x4 shearMatrix = Matrix4x4.identity;
+
+        shearMatrix.SetRow(0, new Vector4(1, s.y, s.z, 0));
+        shearMatrix.SetRow(1, new Vector4(0, 1, 0, 0));
+        shearMatrix.SetRow(2, new Vector4(0, 0, 1, 0));
+
+        return shearMatrix;
+    }
+
+    Matrix4x4 ShearY(Vector3 s) {
+        Matrix4x4 shearMatrix = Matrix4x4.identity;
+
+        shearMatrix.SetRow(0, new Vector4(1, 0, 0, 0));
+        shearMatrix.SetRow(1, new Vector4(s.x, 1, s.z, 0));
+        shearMatrix.SetRow(2, new Vector4(0, 0, 1, 0));
+
+        return shearMatrix;
+    }
+
+    Matrix4x4 ShearZ(Vector3 s) {
+        Matrix4x4 shearMatrix = Matrix4x4.identity;
+
+        shearMatrix.SetRow(0, new Vector4(1, 0, 0, 0));
+        shearMatrix.SetRow(1, new Vector4(0, 1, 0, 0));
+        shearMatrix.SetRow(2, new Vector4(s.x, s.y, 1, 0));
+
+        return shearMatrix;
+    }
+
     Matrix4x4 Translate(Vector3 t) {
         Matrix4x4 transformMatrix = Matrix4x4.identity;
 
@@ -50,9 +81,13 @@ public class AffineTransformations : MonoBehaviour {
         Matrix4x4 affine = Matrix4x4.identity;
 
         Matrix4x4 scale = Scale(instructions.scale);
+        Matrix4x4 shearX = ShearX(instructions.shearX);
+        Matrix4x4 shearY = ShearY(instructions.shearY);
+        Matrix4x4 shearZ = ShearZ(instructions.shearZ);
+        Matrix4x4 shear = shearZ * shearY * shearX;
         Matrix4x4 translate = Translate(instructions.translate);
 
-        affine = translate * scale;
+        affine = shear * scale * translate;
 
         affineTransforms.Add(affine);
     }
