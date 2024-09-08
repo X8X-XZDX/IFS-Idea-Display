@@ -30,6 +30,7 @@ Shader "Custom/Particle" {
 				float4 pos : SV_POSITION;
 				float3 worldPos : TEXCOORD0;
 				float3 normal : TEXCOORD2;
+				int index : TEXCOORD3;
 			};
 
 			StructuredBuffer<float4> _Positions;
@@ -41,29 +42,34 @@ Shader "Custom/Particle" {
 				
 				uint instanceID = GetIndirectInstanceID(svInstanceID);
 
-				float4 pos = v.vertex * 0.025f + float4(_Positions[svInstanceID].xyz, 0);
+				float4 particlePos = _Positions[svInstanceID];
+
+				float4 pos = v.vertex * 0.025f + float4(particlePos.xyz, 0);
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
 				i.normal = UnityObjectToWorldNormal(v.normal);
+				i.index = particlePos.w;
 
 				return i;
+			}
+
+			float hash(uint n) {
+				// integer hash copied from Hugo Elias
+				n = (n << 13U) ^ n;
+				n = n * (n * n * 15731U + 0x789221U) + 0x1376312589U;
+				return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 			}
 
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
 
-				i.worldPos *= 0.1f;
+				i.worldPos *= 0.45f;
 
-				col.r = abs(sin(i.worldPos.x));
-				col.g = abs(sin(i.worldPos.y));
-				col.b = abs(i.worldPos.z);
-
-				col *= 2.5f;
-				col += 0.15f;
+				col *= float3(hash(i.index * 2), hash(i.index * 4), hash(i.index * 3));
 				// col = 1;
 
-				col *= DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.1f;
+				col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
 
 				return float4(col, 1);
 			}

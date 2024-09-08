@@ -57,13 +57,19 @@ public class AffineTransformations : MonoBehaviour {
         affineTransforms.Add(affine);
     }
 
-    void OnEnable() {
+    void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
-        AffineFromInstructions(transforms[0]);
+        for (int i = 0; i < transforms.Count; ++i) {
+            AffineFromInstructions(transforms[i]);
+        }
+    }
+
+    void OnEnable() {
+        PopulateAffineBuffer();
     }
 
     void Update() {
-        
+        PopulateAffineBuffer();
     }
 }
