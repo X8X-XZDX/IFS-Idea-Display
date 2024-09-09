@@ -77,6 +77,34 @@ public class AffineTransformations : MonoBehaviour {
         return transformMatrix;
     }
 
+    Matrix4x4 Rotation(Vector3 r) {
+        float xRad = r.x * Mathf.Deg2Rad;
+        float yRad = r.y * Mathf.Deg2Rad;
+        float zRad = r.z * Mathf.Deg2Rad;
+
+        Matrix4x4 rotateX = Matrix4x4.identity;
+
+        rotateX.SetRow(0, new Vector4(1, 0, 0, 0));
+        rotateX.SetRow(1, new Vector4(0, Mathf.Cos(xRad), -Mathf.Sin(xRad), 0));
+        rotateX.SetRow(2, new Vector4(0, Mathf.Sin(xRad), Mathf.Cos(xRad), 0));
+
+        Matrix4x4 rotateY = Matrix4x4.identity;
+
+        rotateY.SetRow(0, new Vector4(Mathf.Cos(yRad), 0, Mathf.Sin(yRad), 0));
+        rotateY.SetRow(1, new Vector4(0, 1, 0, 0));
+        rotateY.SetRow(2, new Vector4(-Mathf.Sin(yRad), 0, Mathf.Cos(yRad), 0));
+        
+        Matrix4x4 rotateZ = Matrix4x4.identity;
+
+        rotateZ.SetRow(0, new Vector4(Mathf.Cos(zRad), -Mathf.Sin(zRad), 0, 0));
+        rotateZ.SetRow(1, new Vector4(Mathf.Sin(zRad), Mathf.Cos(zRad), 0, 0));
+        rotateZ.SetRow(2, new Vector4(0, 0, 1, 0));
+
+        Matrix4x4 rotationMatrix = rotateZ * rotateY * rotateX;
+
+        return rotationMatrix;
+    }
+
     void AffineFromInstructions(TransformInstructions instructions) {
         Matrix4x4 affine = Matrix4x4.identity;
 
@@ -86,8 +114,9 @@ public class AffineTransformations : MonoBehaviour {
         Matrix4x4 shearZ = ShearZ(instructions.shearZ);
         Matrix4x4 shear = shearZ * shearY * shearX;
         Matrix4x4 translate = Translate(instructions.translate);
+        Matrix4x4 rotation = Rotation(instructions.rotate);
 
-        affine = shear * scale * translate;
+        affine = scale * rotation * shear * translate;
 
         affineTransforms.Add(affine);
     }
