@@ -116,9 +116,22 @@ public class AffineTransformations : MonoBehaviour {
         Matrix4x4 translate = Translate(instructions.translate);
         Matrix4x4 rotation = Rotation(instructions.rotate);
 
-        affine = scale * rotation * shear * translate;
+        affine = translate * rotation * shear * scale;
 
         affineTransforms.Add(affine);
+    }
+
+    public Matrix4x4 InterpolateAffineTransform(int i1, int i2, float t) {
+        Matrix4x4 interpolatedMatrix = Matrix4x4.identity;
+
+        Matrix4x4 m1 = affineTransforms[i1];
+        Matrix4x4 m2 = affineTransforms[i2];
+
+        interpolatedMatrix.SetRow(0, Vector4.Lerp(m1.GetRow(0), m2. GetRow(0), t));
+        interpolatedMatrix.SetRow(1, Vector4.Lerp(m1.GetRow(1), m2. GetRow(1), t));
+        interpolatedMatrix.SetRow(2, Vector4.Lerp(m1.GetRow(2), m2. GetRow(2), t));
+
+        return interpolatedMatrix;
     }
 
     void PopulateAffineBuffer() {

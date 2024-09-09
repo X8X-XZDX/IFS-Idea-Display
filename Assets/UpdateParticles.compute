@@ -30,14 +30,14 @@ void InitializeParticles(uint3 id : SV_DispatchThreadID) {
     _PositionBuffer[id.x] = float4(to3D(id.x) * _CubeSize, 1);
 }
 
+float4x4 _DebugTransform;
+
 [numthreads(8, 1, 1)] 
 void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
     float4 currentPos = _PositionBuffer[id.x];
 
-    float4x4 attractor = _Transformations[_DebugIndex];
-
     float4 newPosition = float4(currentPos.xyz, 1.0f);
-    newPosition = mul(attractor, newPosition);
+    newPosition = mul(_DebugTransform, newPosition);
 
     _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }

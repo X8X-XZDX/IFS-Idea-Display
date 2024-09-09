@@ -7,9 +7,14 @@ public class DebugTransform : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
-    public Vector3 translate = new Vector3(0, 0, 0);
+    public enum DebugMode {
+        InterpolatePositionFromOrigin = 0,
+        InterpolateAffineTransform,
+        InterpolateInstructions
+    } public DebugMode debugMode;
 
     public int debugIndex = 0;
+    public Vector2 affineIndices = new Vector2(0, 0);
 
     [Range(0, 1)]
     public float t = 0;
@@ -17,6 +22,8 @@ public class DebugTransform : MonoBehaviour {
     public bool animate = false;
     [Range(0, 10)]
     public float speed = 1.0f;
+    
+    public Vector3 translate = new Vector3(0, 0, 0);
 
     private float bounce = 1;
 
@@ -26,7 +33,6 @@ public class DebugTransform : MonoBehaviour {
 
     private GraphicsBuffer commandBuffer, positionBuffer, destinationBuffer;
     private GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
-    private ComputeBuffer attractorsBuffer;
     
     private AffineTransformations affineTransformations;
 
@@ -58,25 +64,25 @@ public class DebugTransform : MonoBehaviour {
         particleUpdater.Dispatch(0, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
         particleUpdater.SetBuffer(0, "_PositionBuffer", destinationBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
-        
-        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
     }
 
     void Update() {
         
-        attractorsBuffer.SetData(affineTransformations.GetTransformData());
 
         if (debugIndex > (affineTransformations.GetTransformCount() - 1))
             debugIndex = affineTransformations.GetTransformCount() - 1;
 
-        particleUpdater.SetInt("_DebugIndex", debugIndex);
+        if (debugMode == DebugMode.InterpolatePositionFromOrigin)
+            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.GetTransformData()[debugIndex]);
+        else if (debugMode == DebugMode.InterpolateAffineTransform)
+            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateAffineTransform((int)affineIndices.x, (int)affineIndices.y, t));
 
-        // Reset Particles To Origin
+
+        // Reset Destination Particles
         particleUpdater.SetBuffer(0, "_PositionBuffer", destinationBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
 
         // Apply Debug Transform
-        particleUpdater.SetBuffer(1, "_Transformations", attractorsBuffer);
         particleUpdater.SetBuffer(1, "_PositionBuffer", destinationBuffer);
         particleUpdater.Dispatch(1, Mathf.CeilToInt(512.0f / 8.0f), 1, 1);
 
@@ -92,7 +98,11 @@ public class DebugTransform : MonoBehaviour {
             }
         }
 
-        renderParams.matProps.SetFloat("_Interpolator", t);
+        if (debugMode == DebugMode.InterpolatePositionFromOrigin)
+            renderParams.matProps.SetFloat("_Interpolator", t);
+        else
+            renderParams.matProps.SetFloat("_Interpolator", 1);
+
         renderParams.matProps.SetVector("_Translate", translate);
 
         Graphics.RenderMeshIndirect(renderParams, particleMesh, commandBuffer, 1);
@@ -100,12 +110,10 @@ public class DebugTransform : MonoBehaviour {
 
     void OnDisable() {
         commandBuffer.Release();
-        attractorsBuffer.Release();
         positionBuffer.Release();
         destinationBuffer.Release();
 
         commandBuffer = null;
-        attractorsBuffer = null;
         positionBuffer = null;
         commandIndexedData = null;
         particleMaterial = null;
