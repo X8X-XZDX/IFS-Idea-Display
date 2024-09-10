@@ -10,7 +10,8 @@ public class DebugTransform : MonoBehaviour {
     public enum DebugMode {
         InterpolatePositionFromOrigin = 0,
         InterpolateAffineTransform,
-        InterpolateInstructions
+        InterpolateInstructions,
+        InterpolateInstructionsQuaternion
     } public DebugMode debugMode;
 
     public int debugIndex = 0;
@@ -76,6 +77,10 @@ public class DebugTransform : MonoBehaviour {
             particleUpdater.SetMatrix("_DebugTransform", affineTransformations.GetTransformData()[debugIndex]);
         else if (debugMode == DebugMode.InterpolateAffineTransform)
             particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateAffineTransform((int)affineIndices.x, (int)affineIndices.y, t));
+        else if (debugMode == DebugMode.InterpolateInstructions)
+            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructions((int)affineIndices.x, (int)affineIndices.y, t));
+        else if (debugMode == DebugMode.InterpolateInstructionsQuaternion)
+            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructions((int)affineIndices.x, (int)affineIndices.y, t, true));
 
 
         // Reset Destination Particles

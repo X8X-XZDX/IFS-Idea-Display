@@ -100,12 +100,12 @@ public class AffineTransformations : MonoBehaviour {
         rotateZ.SetRow(1, new Vector4(Mathf.Sin(zRad), Mathf.Cos(zRad), 0, 0));
         rotateZ.SetRow(2, new Vector4(0, 0, 1, 0));
 
-        Matrix4x4 rotationMatrix = rotateZ * rotateY * rotateX;
+        Matrix4x4 rotationMatrix = rotateY * rotateX * rotateZ;
 
         return rotationMatrix;
     }
 
-    void AffineFromInstructions(TransformInstructions instructions) {
+    Matrix4x4 AffineFromInstructions(TransformInstructions instructions) {
         Matrix4x4 affine = Matrix4x4.identity;
 
         Matrix4x4 scale = Scale(instructions.scale);
@@ -118,7 +118,7 @@ public class AffineTransformations : MonoBehaviour {
 
         affine = translate * rotation * shear * scale;
 
-        affineTransforms.Add(affine);
+        return affine;
     }
 
     public Matrix4x4 InterpolateAffineTransform(int i1, int i2, float t) {
@@ -134,11 +134,36 @@ public class AffineTransformations : MonoBehaviour {
         return interpolatedMatrix;
     }
 
+    public Matrix4x4 InterpolateInstructions(int i1, int i2, float t, bool useQuaternion = false) {
+        TransformInstructions interpolatedInstructions = new TransformInstructions();
+
+        TransformInstructions t1 = transforms[i1];
+        TransformInstructions t2 = transforms[i2];
+
+        interpolatedInstructions.scale = Vector3.Lerp(t1.scale, t2.scale, t);
+        interpolatedInstructions.shearX = Vector3.Lerp(t1.shearX, t2.shearX, t);
+        interpolatedInstructions.shearY = Vector3.Lerp(t1.shearY, t2.shearY, t);
+        interpolatedInstructions.shearZ = Vector3.Lerp(t1.shearZ, t2.shearZ, t);
+        interpolatedInstructions.translate = Vector3.Lerp(t1.translate, t2.translate, t);
+
+        if (useQuaternion) {
+            Quaternion r1 = Quaternion.Euler(t1.rotate);
+            Quaternion r2 = Quaternion.Euler(t2.rotate);
+            Quaternion r3 = Quaternion.Slerp(r1, r2, t);
+
+            interpolatedInstructions.rotate = r3.eulerAngles;
+        } else {
+            interpolatedInstructions.rotate = Vector3.Lerp(t1.rotate, t2.rotate, t);
+        }
+
+        return AffineFromInstructions(interpolatedInstructions);
+    }
+
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
         for (int i = 0; i < transforms.Count; ++i) {
-            AffineFromInstructions(transforms[i]);
+            affineTransforms.Add(AffineFromInstructions(transforms[i]));
         }
     }
 
