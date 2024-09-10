@@ -134,7 +134,7 @@ public class AffineTransformations : MonoBehaviour {
         return interpolatedMatrix;
     }
 
-    public Matrix4x4 InterpolateInstructions(int i1, int i2, float t, bool useQuaternion = false) {
+    public Matrix4x4 InterpolateInstructions(int i1, int i2, float t, bool useQuaternion = true) {
         TransformInstructions interpolatedInstructions = new TransformInstructions();
 
         TransformInstructions t1 = transforms[i1];
