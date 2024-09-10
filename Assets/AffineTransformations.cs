@@ -15,6 +15,13 @@ public class AffineTransformations : MonoBehaviour {
         public Vector3 translate;
     }
 
+    public enum AffinePreset {
+        SierpinskiTriangle2D,
+        SierpinskiCarpet2D
+    } public AffinePreset affinePreset;
+
+    public bool resetToPreset = false;
+
     public List<TransformInstructions> transforms = new List<TransformInstructions>();
     
     private List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
@@ -159,6 +166,32 @@ public class AffineTransformations : MonoBehaviour {
         return AffineFromInstructions(interpolatedInstructions);
     }
 
+    List<TransformInstructions> SierpinskiTriangle2D() {
+        List<TransformInstructions> sierpinskiInstructions = new List<TransformInstructions>();
+        
+        TransformInstructions t = new TransformInstructions();
+
+        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
+        t.translate = new Vector3(-1, 0, 0);
+        sierpinskiInstructions.Add(t);
+
+        t.translate = new Vector3(0, 1, 0);
+        sierpinskiInstructions.Add(t);
+        
+        t.translate = new Vector3(1, 0, 0);
+        sierpinskiInstructions.Add(t);
+
+        return sierpinskiInstructions;
+    }
+
+    void ApplyPreset() {
+        transforms.Clear();
+
+        if (affinePreset == AffinePreset.SierpinskiTriangle2D) {
+            transforms = SierpinskiTriangle2D();
+        }
+    }
+
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
@@ -168,10 +201,16 @@ public class AffineTransformations : MonoBehaviour {
     }
 
     void OnEnable() {
+        ApplyPreset();
         PopulateAffineBuffer();
     }
 
     void Update() {
+        if (resetToPreset) {
+            ApplyPreset();
+            resetToPreset = false;
+        }
+
         PopulateAffineBuffer();
     }
 }
