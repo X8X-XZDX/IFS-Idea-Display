@@ -21,31 +21,6 @@ public class ChaosGame : MonoBehaviour {
     private GraphicsBuffer.IndirectDrawArgs[] commandData;
     private GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
 
-    private Vector3[] customAttractorPositions;
-
-    private Vector3[] SierpinskiCarpet3DAttractors = {
-        new Vector3(-0.5f, -0.5f, -0.5f),
-        new Vector3(-0.5f, -0.5f, 0.5f),
-        new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(0.5f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, -0.5f),
-        new Vector3(-0.5f, 0.5f, 0.5f),
-        new Vector3(0.5f, 0.5f, -0.5f),
-        new Vector3(0.5f, 0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, 0.5f, 0.0f),
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f),
-        new Vector3(0.0f, 0.5f, -0.5f),
-        new Vector3(0.0f, 0.5f, 0.5f),
-        new Vector3(0.0f, -0.5f, -0.5f),
-        new Vector3(0.0f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.0f, -0.5f),
-        new Vector3(0.5f, 0.0f, 0.5f),
-        new Vector3(0.5f, 0.0f, -0.5f),
-        new Vector3(-0.5f, 0.0f, 0.5f)
-    };
-
     private RenderParams renderParams;
 
     private ComputeBuffer attractorsBuffer;
@@ -123,6 +98,8 @@ public class ChaosGame : MonoBehaviour {
                 IterateSystem();
             }
         }
+        
+        renderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
 
         if (usePoints)
             Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);

@@ -34,6 +34,7 @@ Shader "Custom/Particle" {
 			};
 
 			StructuredBuffer<float4> _Positions;
+			float4x4 _FinalTransform;
 
 			v2f vp(VertexData v, uint svInstanceID : SV_INSTANCEID) {
 				InitIndirectDrawArgs(0);
@@ -44,7 +45,7 @@ Shader "Custom/Particle" {
 
 				float4 particlePos = _Positions[svInstanceID];
 
-				float4 pos = v.vertex * 0.025f + float4(particlePos.xyz, 0);
+				float4 pos = v.vertex * 0.025f + mul(_FinalTransform, float4(particlePos.xyz, 1));
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);

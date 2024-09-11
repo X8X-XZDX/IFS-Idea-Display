@@ -250,11 +250,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5298ec254435b3245bb3de1e5d24443e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  usePoints: 0
+  usePoints: 1
   particleMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   particleShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  attractor: 2
   manual: 1
   iterationCount: 1
   uncapped: 1
@@ -285,7 +284,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0372fa0dde8ecdc46b6de8c47f330688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 0
+  affinePreset: 5
   resetToPreset: 0
   transforms:
   - scale: {x: 1, y: 1, z: 1}
@@ -306,6 +305,13 @@ MonoBehaviour:
     shearZ: {x: 0, y: 0, z: 0}
     rotate: {x: 0, y: 0, z: 0}
     translate: {x: 1, y: 0, z: 0}
+  finalTransform:
+    scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 0, y: 0, z: 0}
 --- !u!114 &930339300
 MonoBehaviour:
   m_ObjectHideFlags: 0
