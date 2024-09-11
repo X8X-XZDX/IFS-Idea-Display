@@ -228,6 +228,8 @@ GameObject:
   - component: {fileID: 930339297}
   - component: {fileID: 930339299}
   - component: {fileID: 930339300}
+  - component: {fileID: 930339302}
+  - component: {fileID: 930339301}
   - component: {fileID: 930339296}
   m_Layer: 0
   m_Name: Particles
@@ -243,7 +245,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 930339295}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5298ec254435b3245bb3de1e5d24443e, type: 3}
   m_Name: 
@@ -283,55 +285,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0372fa0dde8ecdc46b6de8c47f330688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affineTransforms:
-  - e00: 0.5
-    e01: 0
-    e02: 0
-    e03: -1
-    e10: 0
-    e11: 0.5
-    e12: 0
-    e13: -1
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  - e00: 0.5
-    e01: 0
-    e02: 0
-    e03: 1
-    e10: 0
-    e11: 0.5
-    e12: 0
-    e13: 1
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  - e00: 0.5
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0.5
-    e12: 0
-    e13: 1
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
+  affinePreset: 0
+  resetToPreset: 0
+  transforms:
+  - scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: -78.85, y: 0, z: 0}
+    translate: {x: -1, y: -1, z: 0}
+  - scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 105.07, z: 41.65}
+    translate: {x: 1, y: 1, z: 0}
+  - scale: {x: 0.5, y: 0.5, z: 0.5}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 1, y: 0, z: 0}
 --- !u!114 &930339300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -339,7 +313,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 930339295}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea4a6099724d02d47a98db39fa88dab9, type: 3}
   m_Name: 
@@ -347,10 +321,57 @@ MonoBehaviour:
   particleMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   particleShader: {fileID: 4800000, guid: 36f77b0ca98dd5447a99bda7907756ee, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
+  debugMode: 1
   debugIndex: 0
+  affineIndices: {x: 0, y: 1}
   t: 0
-  animate: 0
+  animate: 1
   speed: 1
+  translate: {x: -5, y: 0, z: 0}
+--- !u!114 &930339301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a6099724d02d47a98db39fa88dab9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  particleMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  particleShader: {fileID: 4800000, guid: 36f77b0ca98dd5447a99bda7907756ee, type: 3}
+  particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
+  debugMode: 3
+  debugIndex: 0
+  affineIndices: {x: 0, y: 1}
+  t: 0
+  animate: 1
+  speed: 1
+  translate: {x: 5, y: 0, z: 0}
+--- !u!114 &930339302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a6099724d02d47a98db39fa88dab9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  particleMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  particleShader: {fileID: 4800000, guid: 36f77b0ca98dd5447a99bda7907756ee, type: 3}
+  particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
+  debugMode: 2
+  debugIndex: 0
+  affineIndices: {x: 0, y: 1}
+  t: 0
+  animate: 1
+  speed: 1
+  translate: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

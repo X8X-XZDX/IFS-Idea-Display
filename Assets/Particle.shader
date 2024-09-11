@@ -69,7 +69,7 @@ Shader "Custom/Particle" {
 				col *= float3(hash(i.index * 2), hash(i.index * 4), hash(i.index * 3));
 				// col = 1;
 
-				col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
+				// col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
 
 				return float4(col, 1);
 			}

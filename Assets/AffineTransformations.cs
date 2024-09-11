@@ -167,21 +167,47 @@ public class AffineTransformations : MonoBehaviour {
     }
 
     List<TransformInstructions> SierpinskiTriangle2D() {
-        List<TransformInstructions> sierpinskiInstructions = new List<TransformInstructions>();
+        List<TransformInstructions> instructions = new List<TransformInstructions>();
         
         TransformInstructions t = new TransformInstructions();
 
         t.scale = new Vector3(0.5f, 0.5f, 0.5f);
         t.translate = new Vector3(-1, 0, 0);
-        sierpinskiInstructions.Add(t);
+        instructions.Add(t);
 
         t.translate = new Vector3(0, 1, 0);
-        sierpinskiInstructions.Add(t);
+        instructions.Add(t);
         
         t.translate = new Vector3(1, 0, 0);
-        sierpinskiInstructions.Add(t);
+        instructions.Add(t);
 
-        return sierpinskiInstructions;
+        return instructions;
+    }
+
+    List<TransformInstructions> SierpinskiCarpet2D() {
+        List<TransformInstructions> instructions = new List<TransformInstructions>();
+        
+        TransformInstructions t = new TransformInstructions();
+
+        Vector3[] SierpinskiCarpet2DTranslations = {
+            new Vector3(-0.5f, -0.5f, 0.0f),
+            new Vector3(-0.5f, 0.5f, 0.0f),
+            new Vector3(0.5f, 0.5f, 0.0f),
+            new Vector3(0.5f, -0.5f, 0.0f),
+            new Vector3(-0.5f, 0.0f, 0.0f),
+            new Vector3(0.5f, 0.0f, 0.0f),
+            new Vector3(0.0f, 0.5f, 0.0f),
+            new Vector3(0.0f, -0.5f, 0.0f)
+        };
+
+        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
+
+        for (int i = 0; i < SierpinskiCarpet2DTranslations.Length; ++i) {
+            t.translate = SierpinskiCarpet2DTranslations[i];
+            instructions.Add(t);
+        }
+
+        return instructions;
     }
 
     void ApplyPreset() {
@@ -189,6 +215,10 @@ public class AffineTransformations : MonoBehaviour {
 
         if (affinePreset == AffinePreset.SierpinskiTriangle2D) {
             transforms = SierpinskiTriangle2D();
+        }
+
+        if (affinePreset == AffinePreset.SierpinskiCarpet2D) {
+            transforms = SierpinskiCarpet2D();
         }
     }
 
