@@ -171,15 +171,18 @@ public class AffineTransformations : MonoBehaviour {
         
         TransformInstructions t = new TransformInstructions();
 
-        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
-        t.translate = new Vector3(-1, 0, 0);
-        instructions.Add(t);
+        Vector3[] translations = {
+            new Vector3(-0.5f, -0.5f, 0.0f),
+            new Vector3(0.0f, 0.36f, 0.0f),
+            new Vector3(0.5f, -0.5f, 0.0f)
+        };
 
-        t.translate = new Vector3(0, 1, 0);
-        instructions.Add(t);
-        
-        t.translate = new Vector3(1, 0, 0);
-        instructions.Add(t);
+        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
+
+        for (int i = 0; i < translations.Length; ++i) {
+            t.translate = translations[i];
+            instructions.Add(t);
+        }
 
         return instructions;
     }
