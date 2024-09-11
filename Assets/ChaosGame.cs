@@ -8,17 +8,6 @@ public class ChaosGame : MonoBehaviour {
     public Shader particleShader;
     public ComputeShader particleUpdater;
 
-    public enum Attractor {
-        Custom = 1,
-        SierpinskiTriangle2D,
-        Vicsek2D,
-        SierpinskiCarpet2D,
-        SierpinskiTriangle3D,
-        Vicsek3D,
-        SierpinskiCarpet3D
-    } public Attractor attractor = Attractor.SierpinskiTriangle2D;
-    private Attractor cachedAttractor;
-
     public bool manual = false;
 
     [Range(1, 20)]
@@ -33,52 +22,6 @@ public class ChaosGame : MonoBehaviour {
     private GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
 
     private Vector3[] customAttractorPositions;
-
-    private Vector3[] SierpinskiTriangle2DAttractors = {
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(0.0f, 0.36f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f)
-    };
-
-    private Vector3[] Vicsek2DAttractors = {
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(-0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f),
-        new Vector3(0.0f, 0.0f, 0.0f)
-    };
-
-    private Vector3[] SierpinskiCarpet2DAttractors = {
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(-0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f),
-        new Vector3(-0.5f, 0.0f, 0.0f),
-        new Vector3(0.5f, 0.0f, 0.0f),
-        new Vector3(0.0f, 0.5f, 0.0f),
-        new Vector3(0.0f, -0.5f, 0.0f)
-    };
-
-    private Vector3[] SierpinskiTriangle3DAttractors = {
-        new Vector3(-0.5f, -0.5f, 0.5f),
-        new Vector3(-0.5f, -0.5f, -0.5f),
-        new Vector3(0.5f, -0.5f, 0.5f),
-        new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(0.0f, 0.36f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f)
-    };
-
-    private Vector3[] Vicsek3DAttractors = {
-        new Vector3(-0.5f, -0.5f, -0.5f),
-        new Vector3(-0.5f, -0.5f, 0.5f),
-        new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(0.5f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, -0.5f),
-        new Vector3(-0.5f, 0.5f, 0.5f),
-        new Vector3(0.5f, 0.5f, -0.5f),
-        new Vector3(0.5f, 0.5f, 0.5f),
-        new Vector3(0.0f, 0.0f, 0.0f)
-    };
 
     private Vector3[] SierpinskiCarpet3DAttractors = {
         new Vector3(-0.5f, -0.5f, -0.5f),

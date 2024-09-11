@@ -18,7 +18,9 @@ public class AffineTransformations : MonoBehaviour {
     public enum AffinePreset {
         SierpinskiTriangle2D,
         Vicsek2D,
-        SierpinskiCarpet2D
+        SierpinskiCarpet2D,
+        SierpinskiTriangle3D,
+        Vicsek3D
     } public AffinePreset affinePreset;
 
     public bool resetToPreset = false;
@@ -237,6 +239,56 @@ public class AffineTransformations : MonoBehaviour {
         return instructions;
     }
 
+    List<TransformInstructions> SierpinskiTriangle3D() {
+        List<TransformInstructions> instructions = new List<TransformInstructions>();
+        
+        TransformInstructions t = new TransformInstructions();
+
+        Vector3[] translations = {
+            new Vector3(-0.5f, -0.5f, 0.5f),
+            new Vector3(-0.5f, -0.5f, -0.5f),
+            new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(0.5f, -0.5f, -0.5f),
+            new Vector3(0.0f, 0.36f, 0.0f),
+        };
+
+        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
+
+        for (int i = 0; i < translations.Length; ++i) {
+            t.translate = translations[i];
+            instructions.Add(t);
+        }
+
+        return instructions;
+    }
+    
+    List<TransformInstructions> Vicsek3D() {
+        List<TransformInstructions> instructions = new List<TransformInstructions>();
+        
+        TransformInstructions t = new TransformInstructions();
+
+        Vector3[] translations = {
+            new Vector3(-0.5f, -0.5f, -0.5f),
+            new Vector3(-0.5f, -0.5f, 0.5f),
+            new Vector3(0.5f, -0.5f, -0.5f),
+            new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(-0.5f, 0.5f, -0.5f),
+            new Vector3(-0.5f, 0.5f, 0.5f),
+            new Vector3(0.5f, 0.5f, -0.5f),
+            new Vector3(0.5f, 0.5f, 0.5f),
+            new Vector3(0.0f, 0.0f, 0.0f)
+        };
+
+        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
+
+        for (int i = 0; i < translations.Length; ++i) {
+            t.translate = translations[i];
+            instructions.Add(t);
+        }
+
+        return instructions;
+    }
+
     void ApplyPreset() {
         transforms.Clear();
 
@@ -250,6 +302,14 @@ public class AffineTransformations : MonoBehaviour {
 
         if (affinePreset == AffinePreset.SierpinskiCarpet2D) {
             transforms = SierpinskiCarpet2D();
+        }
+
+        if (affinePreset == AffinePreset.SierpinskiTriangle3D) {
+            transforms = SierpinskiTriangle3D();
+        }
+
+        if (affinePreset == AffinePreset.Vicsek3D) {
+            transforms = Vicsek3D();
         }
     }
 
