@@ -305,6 +305,13 @@ MonoBehaviour:
     shearZ: {x: 0, y: 0, z: 0}
     rotate: {x: 0, y: 0, z: 0}
     translate: {x: 1, y: 0, z: 0}
+  postTransform:
+    scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 0, y: 0, z: 0}
   finalTransform:
     scale: {x: 1, y: 1, z: 1}
     shearX: {x: 0, y: 0, z: 0}

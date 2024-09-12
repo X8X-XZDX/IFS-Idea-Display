@@ -28,6 +28,8 @@ public class AffineTransformations : MonoBehaviour {
 
     public List<TransformInstructions> transforms = new List<TransformInstructions>();
 
+    public TransformInstructions postTransform = new TransformInstructions();
+
     public TransformInstructions finalTransform = new TransformInstructions();
     
     private List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
@@ -365,8 +367,10 @@ public class AffineTransformations : MonoBehaviour {
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
+        Matrix4x4 postAffine = AffineFromInstructions(postTransform);
+
         for (int i = 0; i < transforms.Count; ++i) {
-            affineTransforms.Add(AffineFromInstructions(transforms[i]));
+            affineTransforms.Add(postAffine * AffineFromInstructions(transforms[i]));
         }
     }
 
