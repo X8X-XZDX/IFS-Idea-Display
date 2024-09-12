@@ -5,32 +5,9 @@ using UnityEngine;
 
 public class AffineTransformations : MonoBehaviour {
 
-    [Serializable]
-    public struct TransformInstructions {
-        public Vector3 scale;
-        public Vector3 shearX;
-        public Vector3 shearY;
-        public Vector3 shearZ;
-        public Vector3 rotate;
-        public Vector3 translate;
-    }
+    public TransformSet set1, set2;
 
-    public enum AffinePreset {
-        SierpinskiTriangle2D,
-        Vicsek2D,
-        SierpinskiCarpet2D,
-        SierpinskiTriangle3D,
-        Vicsek3D,
-        SierpinskiCarpet3D
-    } public AffinePreset affinePreset;
-
-    public bool resetToPreset = false;
-
-    public List<TransformInstructions> transforms = new List<TransformInstructions>();
-
-    public TransformInstructions postTransform = new TransformInstructions();
-
-    public TransformInstructions finalTransform = new TransformInstructions();
+    public TransformSet.TransformInstructions finalTransform = new TransformSet.TransformInstructions();
     
     private List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
 
@@ -124,7 +101,7 @@ public class AffineTransformations : MonoBehaviour {
         return rotationMatrix;
     }
 
-    Matrix4x4 AffineFromInstructions(TransformInstructions instructions) {
+    Matrix4x4 AffineFromInstructions(TransformSet.TransformInstructions instructions) {
         Matrix4x4 affine = Matrix4x4.identity;
 
         Matrix4x4 scale = Scale(instructions.scale);
@@ -154,10 +131,10 @@ public class AffineTransformations : MonoBehaviour {
     }
 
     public Matrix4x4 InterpolateInstructions(int i1, int i2, float t, bool useQuaternion = true) {
-        TransformInstructions interpolatedInstructions = new TransformInstructions();
+        TransformSet.TransformInstructions interpolatedInstructions = new TransformSet.TransformInstructions();
 
-        TransformInstructions t1 = transforms[i1];
-        TransformInstructions t2 = transforms[i2];
+        TransformSet.TransformInstructions t1 = set1.transformSet[i1];
+        TransformSet.TransformInstructions t2 = set1.transformSet[i2];
 
         interpolatedInstructions.scale = Vector3.Lerp(t1.scale, t2.scale, t);
         interpolatedInstructions.shearX = Vector3.Lerp(t1.shearX, t2.shearX, t);
@@ -178,212 +155,21 @@ public class AffineTransformations : MonoBehaviour {
         return AffineFromInstructions(interpolatedInstructions);
     }
 
-    List<TransformInstructions> SierpinskiTriangle2D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-            new Vector3(-0.5f, -0.5f, 0.0f),
-            new Vector3(0.0f, 0.36f, 0.0f),
-            new Vector3(0.5f, -0.5f, 0.0f)
-        };
-
-        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-
-    List<TransformInstructions> Vicsek2D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-            new Vector3(-0.5f, -0.5f, 0.0f),
-            new Vector3(-0.5f, 0.5f, 0.0f),
-            new Vector3(0.5f, 0.5f, 0.0f),
-            new Vector3(0.5f, -0.5f, 0.0f),
-            new Vector3(0.0f, 0.0f, 0.0f)
-        };
-
-        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-
-    List<TransformInstructions> SierpinskiCarpet2D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-            new Vector3(-0.5f, -0.5f, 0.0f),
-            new Vector3(-0.5f, 0.5f, 0.0f),
-            new Vector3(0.5f, 0.5f, 0.0f),
-            new Vector3(0.5f, -0.5f, 0.0f),
-            new Vector3(-0.5f, 0.0f, 0.0f),
-            new Vector3(0.5f, 0.0f, 0.0f),
-            new Vector3(0.0f, 0.5f, 0.0f),
-            new Vector3(0.0f, -0.5f, 0.0f)
-        };
-
-        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-
-    List<TransformInstructions> SierpinskiTriangle3D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-            new Vector3(-0.5f, -0.5f, 0.5f),
-            new Vector3(-0.5f, -0.5f, -0.5f),
-            new Vector3(0.5f, -0.5f, 0.5f),
-            new Vector3(0.5f, -0.5f, -0.5f),
-            new Vector3(0.0f, 0.36f, 0.0f),
-        };
-
-        t.scale = new Vector3(0.5f, 0.5f, 0.5f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-    
-    List<TransformInstructions> Vicsek3D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-            new Vector3(-0.5f, -0.5f, -0.5f),
-            new Vector3(-0.5f, -0.5f, 0.5f),
-            new Vector3(0.5f, -0.5f, -0.5f),
-            new Vector3(0.5f, -0.5f, 0.5f),
-            new Vector3(-0.5f, 0.5f, -0.5f),
-            new Vector3(-0.5f, 0.5f, 0.5f),
-            new Vector3(0.5f, 0.5f, -0.5f),
-            new Vector3(0.5f, 0.5f, 0.5f),
-            new Vector3(0.0f, 0.0f, 0.0f)
-        };
-
-        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-
-    List<TransformInstructions> SierpinskiCarpet3D() {
-        List<TransformInstructions> instructions = new List<TransformInstructions>();
-        
-        TransformInstructions t = new TransformInstructions();
-
-        Vector3[] translations = {
-        new Vector3(-0.5f, -0.5f, -0.5f),
-        new Vector3(-0.5f, -0.5f, 0.5f),
-        new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(0.5f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, -0.5f),
-        new Vector3(-0.5f, 0.5f, 0.5f),
-        new Vector3(0.5f, 0.5f, -0.5f),
-        new Vector3(0.5f, 0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, 0.5f, 0.0f),
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f),
-        new Vector3(0.0f, 0.5f, -0.5f),
-        new Vector3(0.0f, 0.5f, 0.5f),
-        new Vector3(0.0f, -0.5f, -0.5f),
-        new Vector3(0.0f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.0f, -0.5f),
-        new Vector3(0.5f, 0.0f, 0.5f),
-        new Vector3(0.5f, 0.0f, -0.5f),
-        new Vector3(-0.5f, 0.0f, 0.5f)
-    };
-
-        t.scale = new Vector3(0.33f, 0.33f, 0.33f);
-
-        for (int i = 0; i < translations.Length; ++i) {
-            t.translate = translations[i];
-            instructions.Add(t);
-        }
-
-        return instructions;
-    }
-
-    void ApplyPreset() {
-        transforms.Clear();
-
-        if (affinePreset == AffinePreset.SierpinskiTriangle2D) {
-            transforms = SierpinskiTriangle2D();
-        }
-
-        if (affinePreset == AffinePreset.Vicsek2D) {
-            transforms = Vicsek2D();
-        }
-
-        if (affinePreset == AffinePreset.SierpinskiCarpet2D) {
-            transforms = SierpinskiCarpet2D();
-        }
-
-        if (affinePreset == AffinePreset.SierpinskiTriangle3D) {
-            transforms = SierpinskiTriangle3D();
-        }
-
-        if (affinePreset == AffinePreset.Vicsek3D) {
-            transforms = Vicsek3D();
-        }
-
-        if (affinePreset == AffinePreset.SierpinskiCarpet3D) {
-            transforms = SierpinskiCarpet3D();
-        }
-    }
-
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
-        Matrix4x4 postAffine = AffineFromInstructions(postTransform);
+        Matrix4x4 postAffine = AffineFromInstructions(set1.postTransform);
 
-        for (int i = 0; i < transforms.Count; ++i) {
-            affineTransforms.Add(postAffine * AffineFromInstructions(transforms[i]));
+        for (int i = 0; i < set1.transformSet.Count; ++i) {
+            affineTransforms.Add(postAffine * AffineFromInstructions(set1.transformSet[i]));
         }
     }
 
     void OnEnable() {
-        ApplyPreset();
         PopulateAffineBuffer();
     }
 
     void Update() {
-        if (resetToPreset) {
-            ApplyPreset();
-        }
-
         PopulateAffineBuffer();
     }
 }

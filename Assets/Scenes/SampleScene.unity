@@ -226,6 +226,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 930339297}
+  - component: {fileID: 930339303}
   - component: {fileID: 930339299}
   - component: {fileID: 930339300}
   - component: {fileID: 930339302}
@@ -284,34 +285,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0372fa0dde8ecdc46b6de8c47f330688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 5
-  resetToPreset: 0
-  transforms:
-  - scale: {x: 1, y: 1, z: 1}
-    shearX: {x: 0, y: 0, z: 0}
-    shearY: {x: 0, y: 0, z: 0}
-    shearZ: {x: 0, y: 0, z: 0}
-    rotate: {x: -78.85, y: 0, z: 0}
-    translate: {x: -1, y: -1, z: 0}
-  - scale: {x: 1, y: 1, z: 1}
-    shearX: {x: 0, y: 0, z: 0}
-    shearY: {x: 0, y: 0, z: 0}
-    shearZ: {x: 0, y: 0, z: 0}
-    rotate: {x: 0, y: 105.07, z: 41.65}
-    translate: {x: 1, y: 1, z: 0}
-  - scale: {x: 0.5, y: 0.5, z: 0.5}
-    shearX: {x: 0, y: 0, z: 0}
-    shearY: {x: 0, y: 0, z: 0}
-    shearZ: {x: 0, y: 0, z: 0}
-    rotate: {x: 0, y: 0, z: 0}
-    translate: {x: 1, y: 0, z: 0}
-  postTransform:
-    scale: {x: 1, y: 1, z: 1}
-    shearX: {x: 0, y: 0, z: 0}
-    shearY: {x: 0, y: 0, z: 0}
-    shearZ: {x: 0, y: 0, z: 0}
-    rotate: {x: 0, y: 0, z: 0}
-    translate: {x: 0, y: 0, z: 0}
+  set1: {fileID: 930339303}
+  set2: {fileID: 0}
   finalTransform:
     scale: {x: 1, y: 1, z: 1}
     shearX: {x: 0, y: 0, z: 0}
@@ -385,6 +360,28 @@ MonoBehaviour:
   animate: 1
   speed: 1
   translate: {x: 0, y: 0, z: 0}
+--- !u!114 &930339303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  affinePreset: 0
+  resetToPreset: 1
+  transformSet: []
+  postTransform:
+    scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
