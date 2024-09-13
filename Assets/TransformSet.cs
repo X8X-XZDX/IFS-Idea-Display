@@ -52,7 +52,7 @@ public partial class TransformSet : MonoBehaviour {
         return identity;
     }
 
-    void ApplyPreset() {
+    public void ApplyPreset() {
         transformSet.Clear();
 
         if (affinePreset == AffinePreset.SierpinskiTriangle2D) {

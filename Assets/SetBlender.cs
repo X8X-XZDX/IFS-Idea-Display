@@ -9,10 +9,17 @@ public class SetBlender : MonoBehaviour {
 
     [Range(0.0f, 1.0f)]
     public float t = 0.0f;
+
+    public bool animate = false;
+
+    [Range(0.01f, 2.0f)]
+    public float speed = 1.0f;
     
     public TransformInstructions finalTransform = new TransformInstructions();
 
     private List<TransformInstructions> blendedSet = new List<TransformInstructions>();
+
+    private float bounce = 1;
 
     public List<TransformInstructions> GetBlendedSet() {
         return blendedSet;
@@ -75,10 +82,28 @@ public class SetBlender : MonoBehaviour {
     }
 
     private void OnEnable() {
+        t = 0;
         BlendSets();
     }
 
     private void Update() {
+
+        if (animate) {
+            if (t > 1) {
+                t = Mathf.Clamp(t, 0.0f, 1.0f);
+                bounce *= -1;
+
+                set1.ApplyPreset();
+            } else if (t < 0) {
+                t = Mathf.Clamp(t, 0.0f, 1.0f);
+                bounce *= -1;
+
+                set2.ApplyPreset();
+            }
+
+            t += Time.deltaTime * bounce * speed;
+        }
+
         BlendSets();
     }
 }
