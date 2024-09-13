@@ -23,13 +23,20 @@ public partial class TransformSet : MonoBehaviour {
             this.translate = translate;
         }
 
-        public static TransformInstructions operator +(TransformInstructions a, TransformInstructions b) 
-            => new TransformInstructions(Vector3.Scale(a.scale, b.scale), a.shearX + b.shearX, a.shearY + b.shearY, a.shearZ + b.shearZ, a.rotate + b.rotate, a.translate + b.translate);
+        public static TransformInstructions operator +(TransformInstructions a, TransformInstructions b) {
+            Quaternion q1 = Quaternion.Euler(a.rotate);
+            Quaternion q2 = Quaternion.Euler(b.rotate);
+            Quaternion q3 = q1 * q2;
+
+            return new TransformInstructions(Vector3.Scale(a.scale, b.scale), a.shearX + b.shearX, a.shearY + b.shearY, a.shearZ + b.shearZ, q3.eulerAngles, a.translate + b.translate);    
+        } 
     }
     
     public AffinePreset affinePreset;
 
     public bool resetToPreset = false;
+
+    public ProceduralSettings proceduralSettings = new ProceduralSettings();
     
     public List<TransformInstructions> transformSet = new List<TransformInstructions>();
     
@@ -80,6 +87,9 @@ public partial class TransformSet : MonoBehaviour {
     }
 
     void Update() {
-        if (resetToPreset) ApplyPreset();
+        if (resetToPreset) {
+            ApplyPreset();
+            resetToPreset = false;
+        }
     }
 }

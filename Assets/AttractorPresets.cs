@@ -1,3 +1,5 @@
+using System;
+using Random = UnityEngine.Random;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -171,20 +173,39 @@ public partial class TransformSet : MonoBehaviour {
         return instructions;
     }
 
+    [Serializable]
+    public struct ProceduralSettings {
+        public int instructionCount;
+        public Vector3 scaleMin;
+        public Vector3 scaleMax;
+        public Vector3 shearXMin;
+        public Vector3 shearXMax;
+        public Vector3 shearYMin;
+        public Vector3 shearYMax;
+        public Vector3 shearZMin;
+        public Vector3 shearZMax;
+        public Vector3 rotateMin;
+        public Vector3 rotateMax;
+        public Vector3 translateMin;
+        public Vector3 translateMax;
+    }
+
+    Vector3 GenerateRandomVector(Vector3 min, Vector3 max) {
+        return new Vector3(Random.Range(min.x, max.x), Random.Range(min.y, max.y), Random.Range(min.z, max.z));
+    }
+
     List<TransformInstructions> ProceduralInstructions() {
         List<TransformInstructions> instructions = new List<TransformInstructions>();
-            
-        int instructionCount = 9;
 
-        for (int i = 0; i < instructionCount; ++i) {
+        for (int i = 0; i < proceduralSettings.instructionCount; ++i) {
             TransformInstructions t = new TransformInstructions();
 
-            t.scale = new Vector3(Random.value, Random.value, Random.value);
-            t.shearX = new Vector3(0, Random.value * 0.1f, Random.value * 0.1f);
-            t.shearY = new Vector3(Random.value * 0.1f, 0, Random.value * 0.1f);
-            t.shearZ = new Vector3(Random.value * 0.1f, Random.value * 0.1f, 0);
-            t.rotate = new Vector3(Random.value * 360.0f, Random.value * 360.0f, Random.value * 360.0f);
-            t.translate = new Vector3(Random.value * 10, Random.value * 10, Random.value * 10);
+            t.scale = GenerateRandomVector(proceduralSettings.scaleMin, proceduralSettings.scaleMax);
+            t.shearX = GenerateRandomVector(proceduralSettings.shearXMin, proceduralSettings.shearXMax);
+            t.shearY = GenerateRandomVector(proceduralSettings.shearYMin, proceduralSettings.shearYMax);
+            t.shearZ = GenerateRandomVector(proceduralSettings.shearZMin, proceduralSettings.shearZMax);
+            t.rotate = GenerateRandomVector(proceduralSettings.rotateMin, proceduralSettings.rotateMax);
+            t.translate = GenerateRandomVector(proceduralSettings.translateMin, proceduralSettings.translateMax);
 
             instructions.Add(t);
         }

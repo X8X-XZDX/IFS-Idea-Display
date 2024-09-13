@@ -77,10 +77,10 @@ public class DebugTransform : MonoBehaviour {
             particleUpdater.SetMatrix("_DebugTransform", affineTransformations.GetTransformData()[debugIndex]);
         else if (debugMode == DebugMode.InterpolateAffineTransform)
             particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateAffineTransform((int)affineIndices.x, (int)affineIndices.y, t));
-        else if (debugMode == DebugMode.InterpolateInstructions)
-            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructionsDebug((int)affineIndices.x, (int)affineIndices.y, t, false));
-        else if (debugMode == DebugMode.InterpolateInstructionsQuaternion)
-            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructionsDebug((int)affineIndices.x, (int)affineIndices.y, t));
+        // else if (debugMode == DebugMode.InterpolateInstructions)
+        //     particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructionsDebug((int)affineIndices.x, (int)affineIndices.y, t, false));
+        // else if (debugMode == DebugMode.InterpolateInstructionsQuaternion)
+        //     particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateInstructionsDebug((int)affineIndices.x, (int)affineIndices.y, t));
 
 
         // Reset Destination Particles

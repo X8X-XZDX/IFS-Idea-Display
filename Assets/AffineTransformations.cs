@@ -5,14 +5,10 @@ using UnityEngine;
 
 public class AffineTransformations : MonoBehaviour {
 
-    public TransformSet set1, set2;
-
-    [Range(0.0f, 1.0f)]
-    public float t = 0.0f;
-
-    public TransformSet.TransformInstructions finalTransform = new TransformSet.TransformInstructions();
+    public SetBlender setBlender;
     
     private List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
+    private Matrix4x4 finalAffine = new Matrix4x4();
 
     public int GetTransformCount() {
         return affineTransforms.Count;
@@ -23,7 +19,7 @@ public class AffineTransformations : MonoBehaviour {
     }
 
     public Matrix4x4 GetFinalTransform() {
-        return AffineFromInstructions(finalTransform);
+        return finalAffine;
     }
 
     Matrix4x4 Scale(Vector3 s) {
@@ -133,83 +129,17 @@ public class AffineTransformations : MonoBehaviour {
         return interpolatedMatrix;
     }
 
-    public Matrix4x4 InterpolateInstructionsDebug(int i1, int i2, float t, bool useQuaternion = true) {
-        TransformSet.TransformInstructions interpolatedInstructions = new TransformSet.TransformInstructions();
-
-        TransformSet.TransformInstructions t1 = set1.transformSet[i1];
-        TransformSet.TransformInstructions t2 = set1.transformSet[i2];
-
-        interpolatedInstructions.scale = Vector3.Lerp(t1.scale, t2.scale, t);
-        interpolatedInstructions.shearX = Vector3.Lerp(t1.shearX, t2.shearX, t);
-        interpolatedInstructions.shearY = Vector3.Lerp(t1.shearY, t2.shearY, t);
-        interpolatedInstructions.shearZ = Vector3.Lerp(t1.shearZ, t2.shearZ, t);
-        interpolatedInstructions.translate = Vector3.Lerp(t1.translate, t2.translate, t);
-
-        if (useQuaternion) {
-            Quaternion r1 = Quaternion.Euler(t1.rotate);
-            Quaternion r2 = Quaternion.Euler(t2.rotate);
-            Quaternion r3 = Quaternion.Slerp(r1, r2, t);
-
-            interpolatedInstructions.rotate = r3.eulerAngles;
-        } else {
-            interpolatedInstructions.rotate = Vector3.Lerp(t1.rotate, t2.rotate, t);
-        }
-
-        return AffineFromInstructions(interpolatedInstructions);
-    }
-
-    TransformSet.TransformInstructions InterpolateInstructions(TransformSet.TransformInstructions t1, TransformSet.TransformInstructions t2, float t) {
-        TransformSet.TransformInstructions interpolatedInstructions = new TransformSet.TransformInstructions();
-
-        interpolatedInstructions.scale = Vector3.Lerp(t1.scale, t2.scale, t);
-        interpolatedInstructions.shearX = Vector3.Lerp(t1.shearX, t2.shearX, t);
-        interpolatedInstructions.shearY = Vector3.Lerp(t1.shearY, t2.shearY, t);
-        interpolatedInstructions.shearZ = Vector3.Lerp(t1.shearZ, t2.shearZ, t);
-        interpolatedInstructions.translate = Vector3.Lerp(t1.translate, t2.translate, t);
-
-        Quaternion r1 = Quaternion.Euler(t1.rotate);
-        Quaternion r2 = Quaternion.Euler(t2.rotate);
-        Quaternion r3 = Quaternion.Slerp(r1, r2, t);
-
-        interpolatedInstructions.rotate = r3.eulerAngles;
-
-        return interpolatedInstructions;
-    }
-
 
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
-        // Copy instruction sets so the following modifications don't ruin the original
-        List<TransformSet.TransformInstructions> instructionSet1 = new List<TransformSet.TransformInstructions>(set1.transformSet);
-        List<TransformSet.TransformInstructions> instructionSet2 = new List<TransformSet.TransformInstructions>(set2.transformSet);
+        List<TransformSet.TransformInstructions> instructionSet = setBlender.GetBlendedSet();
 
-        // Apply post transform to all instruction sets
-        for (int i = 0; i < instructionSet1.Count; ++i) {
-            instructionSet1[i] += set1.postTransform;
+        for (int i = 0; i < instructionSet.Count; ++i) {
+            affineTransforms.Add(AffineFromInstructions(instructionSet[i]));
         }
 
-        for (int i = 0; i < instructionSet2.Count; ++i) {
-            instructionSet2[i] += set2.postTransform;
-        }
-
-        // In order to blend smaller instruction sets with larger instruction sets, append identity matrices to smaller set
-        int sizeDifference = Mathf.Abs(instructionSet1.Count - instructionSet2.Count);
-        if (instructionSet1.Count < instructionSet2.Count) {
-            for (int i = 0; i < sizeDifference; ++i) {
-                instructionSet1.Add(TransformSet.GetIdentity());
-            }
-        } else if (instructionSet2.Count < instructionSet1.Count) {
-            for (int i = 0; i < sizeDifference; ++i) {
-                instructionSet2.Add(TransformSet.GetIdentity());
-            }
-        }
-
-        // Blend instruction sets and create list of affine transformations
-        for (int i = 0; i < instructionSet1.Count; ++i) {
-            TransformSet.TransformInstructions interpolatedInstructions = InterpolateInstructions(instructionSet1[i], instructionSet2[i], t);
-            affineTransforms.Add(AffineFromInstructions(interpolatedInstructions));
-        }
+        finalAffine = AffineFromInstructions(setBlender.GetFinalTransform());
     }
 
     void OnEnable() {
