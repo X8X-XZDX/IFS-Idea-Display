@@ -34,13 +34,15 @@ public partial class TransformSet : MonoBehaviour {
     
     public AffinePreset affinePreset;
 
-    public bool resetToPreset = false;
+    public int randomInstructionCount = 8;
 
-    public ProceduralSettings proceduralSettings = new ProceduralSettings();
+    public bool resetToPreset = false;
     
     public List<TransformInstructions> transformSet = new List<TransformInstructions>();
     
     public TransformInstructions postTransform = new TransformInstructions();
+
+    private ProceduralWizard proceduralWizard;
 
     public static TransformInstructions GetIdentity() {
         TransformInstructions identity = new TransformInstructions();
@@ -83,6 +85,7 @@ public partial class TransformSet : MonoBehaviour {
     }
 
     void OnEnable() {
+        proceduralWizard = GetComponent<ProceduralWizard>();
         ApplyPreset();
     }
 
