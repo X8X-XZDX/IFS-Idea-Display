@@ -69,6 +69,10 @@ public partial class TransformSet : MonoBehaviour {
         if (affinePreset == AffinePreset.SierpinskiCarpet3D) {
             transformSet = SierpinskiCarpet3D();
         }
+
+        if (affinePreset == AffinePreset.Procedural) {
+            transformSet = ProceduralInstructions();
+        }
     }
 
     void OnEnable() {

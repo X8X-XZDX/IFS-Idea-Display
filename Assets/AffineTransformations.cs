@@ -180,9 +180,11 @@ public class AffineTransformations : MonoBehaviour {
     void PopulateAffineBuffer() {
         affineTransforms.Clear();
 
+        // Copy instruction sets so the following modifications don't ruin the original
         List<TransformSet.TransformInstructions> instructionSet1 = new List<TransformSet.TransformInstructions>(set1.transformSet);
         List<TransformSet.TransformInstructions> instructionSet2 = new List<TransformSet.TransformInstructions>(set2.transformSet);
 
+        // Apply post transform to all instruction sets
         for (int i = 0; i < instructionSet1.Count; ++i) {
             instructionSet1[i] += set1.postTransform;
         }
@@ -191,6 +193,7 @@ public class AffineTransformations : MonoBehaviour {
             instructionSet2[i] += set2.postTransform;
         }
 
+        // In order to blend smaller instruction sets with larger instruction sets, append identity matrices to smaller set
         int sizeDifference = Mathf.Abs(instructionSet1.Count - instructionSet2.Count);
         if (instructionSet1.Count < instructionSet2.Count) {
             for (int i = 0; i < sizeDifference; ++i) {
@@ -202,8 +205,7 @@ public class AffineTransformations : MonoBehaviour {
             }
         }
 
-        // Matrix4x4 postAffine = AffineFromInstructions(InterpolateInstructions(set1.postTransform, set2.postTransform, t));
-
+        // Blend instruction sets and create list of affine transformations
         for (int i = 0; i < instructionSet1.Count; ++i) {
             TransformSet.TransformInstructions interpolatedInstructions = InterpolateInstructions(instructionSet1[i], instructionSet2[i], t);
             affineTransforms.Add(AffineFromInstructions(interpolatedInstructions));

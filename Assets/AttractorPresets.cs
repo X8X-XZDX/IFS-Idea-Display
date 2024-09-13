@@ -9,7 +9,8 @@ public partial class TransformSet : MonoBehaviour {
         SierpinskiCarpet2D,
         SierpinskiTriangle3D,
         Vicsek3D,
-        SierpinskiCarpet3D
+        SierpinskiCarpet3D,
+        Procedural
     } 
 
     List<TransformInstructions> SierpinskiTriangle2D() {
@@ -164,6 +165,27 @@ public partial class TransformSet : MonoBehaviour {
 
         for (int i = 0; i < translations.Length; ++i) {
             t.translate = translations[i];
+            instructions.Add(t);
+        }
+
+        return instructions;
+    }
+
+    List<TransformInstructions> ProceduralInstructions() {
+        List<TransformInstructions> instructions = new List<TransformInstructions>();
+            
+        int instructionCount = 9;
+
+        for (int i = 0; i < instructionCount; ++i) {
+            TransformInstructions t = new TransformInstructions();
+
+            t.scale = new Vector3(Random.value, Random.value, Random.value);
+            t.shearX = new Vector3(0, Random.value * 0.1f, Random.value * 0.1f);
+            t.shearY = new Vector3(Random.value * 0.1f, 0, Random.value * 0.1f);
+            t.shearZ = new Vector3(Random.value * 0.1f, Random.value * 0.1f, 0);
+            t.rotate = new Vector3(Random.value * 360.0f, Random.value * 360.0f, Random.value * 360.0f);
+            t.translate = new Vector3(Random.value * 10, Random.value * 10, Random.value * 10);
+
             instructions.Add(t);
         }
 
