@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class IteratedFunctionSystem : MonoBehaviour {
+    public AffineTransformations affineTransformations;
+    
     public Shader pointShader, cubeShader;
 
     public ComputeShader particleUpdater;
@@ -20,13 +22,12 @@ public class IteratedFunctionSystem : MonoBehaviour {
     private Mesh quadMesh, cubeMesh;
     private Material pointMaterial, cubeMaterial;
 
-    private GraphicsBuffer pointCommandBuffer, quadCommandBuffer, cubeCommandBuffer, positionBuffer;
+    public GraphicsBuffer positionBuffer;
+    private GraphicsBuffer pointCommandBuffer, quadCommandBuffer, cubeCommandBuffer;
     private GraphicsBuffer.IndirectDrawArgs[] pointCommandData;
     private GraphicsBuffer.IndirectDrawIndexedArgs[] quadCommandData, cubeCommandData;
 
     private RenderParams pointRenderParams, meshRenderParams;
-
-    private AffineTransformations affineTransformations;
 
     void InitializeCommandBuffers() {
         pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
@@ -81,8 +82,6 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
 
     void OnEnable() {
-        affineTransformations = GetComponent<AffineTransformations>();
-
         quadMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
         cubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
 
