@@ -226,12 +226,16 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 930339297}
+  - component: {fileID: 930339306}
   - component: {fileID: 930339303}
+  - component: {fileID: 930339304}
+  - component: {fileID: 930339305}
   - component: {fileID: 930339299}
   - component: {fileID: 930339300}
   - component: {fileID: 930339302}
   - component: {fileID: 930339301}
   - component: {fileID: 930339296}
+  - component: {fileID: 930339307}
   m_Layer: 0
   m_Name: Particles
   m_TagString: Untagged
@@ -246,16 +250,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 930339295}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5298ec254435b3245bb3de1e5d24443e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  usePoints: 1
-  particleMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  particleShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  usePoints: 0
+  particleMesh: {fileID: 0}
+  particleShader: {fileID: 0}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  manual: 1
+  manual: 0
   iterationCount: 1
   uncapped: 1
 --- !u!4 &930339297
@@ -285,15 +289,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0372fa0dde8ecdc46b6de8c47f330688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  set1: {fileID: 930339303}
-  set2: {fileID: 0}
-  finalTransform:
-    scale: {x: 1, y: 1, z: 1}
-    shearX: {x: 0, y: 0, z: 0}
-    shearY: {x: 0, y: 0, z: 0}
-    shearZ: {x: 0, y: 0, z: 0}
-    rotate: {x: 0, y: 0, z: 0}
-    translate: {x: 0, y: 0, z: 0}
+  setBlender: {fileID: 930339305}
 --- !u!114 &930339300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -373,6 +369,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   affinePreset: 0
+  randomInstructionCount: 8
   resetToPreset: 1
   transformSet: []
   postTransform:
@@ -382,6 +379,95 @@ MonoBehaviour:
     shearZ: {x: 0, y: 0, z: 0}
     rotate: {x: 0, y: 0, z: 0}
     translate: {x: 0, y: 0, z: 0}
+--- !u!114 &930339304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  affinePreset: 2
+  randomInstructionCount: 8
+  resetToPreset: 1
+  transformSet: []
+  postTransform:
+    scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 0, y: 0, z: 0}
+--- !u!114 &930339305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57bb4d0125e093e40bfdf8d42fac5934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  set1: {fileID: 930339303}
+  set2: {fileID: 930339304}
+  t: 0
+  animate: 0
+  speed: 1
+  finalTransform:
+    scale: {x: 1, y: 1, z: 1}
+    shearX: {x: 0, y: 0, z: 0}
+    shearY: {x: 0, y: 0, z: 0}
+    shearZ: {x: 0, y: 0, z: 0}
+    rotate: {x: 0, y: 0, z: 0}
+    translate: {x: 0, y: 0, z: 0}
+--- !u!114 &930339306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e736e87fafb0554f9f37774f5cef63f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scaleMin: {x: -1, y: -1, z: -1}
+  scaleMax: {x: 1, y: 1, z: 1}
+  shearXMin: {x: 0, y: 0, z: 0}
+  shearXMax: {x: 0, y: 0, z: 0}
+  shearYMin: {x: 0, y: 0, z: 0}
+  shearYMax: {x: 0, y: 0, z: 0}
+  shearZMin: {x: 0, y: 0, z: 0}
+  shearZMax: {x: 0, y: 0, z: 0}
+  rotateMin: {x: 0, y: 0, z: 0}
+  rotateMax: {x: 0, y: 0, z: 0}
+  translateMin: {x: -1, y: -1, z: -1}
+  translateMax: {x: 1, y: 1, z: 1}
+--- !u!114 &930339307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d32cc418c7c2c47adcb5f016300918, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  cubeShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
+  particleMeshMode: 0
+  particleCount: 200000
+  uncapped: 1
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
