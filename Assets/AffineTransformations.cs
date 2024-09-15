@@ -8,14 +8,21 @@ public class AffineTransformations : MonoBehaviour {
     public SetBlender setBlender;
     
     private List<Matrix4x4> affineTransforms = new List<Matrix4x4>();
+    
     private Matrix4x4 finalAffine = new Matrix4x4();
+    
+    private ComputeBuffer attractorsBuffer;
 
     public int GetTransformCount() {
         return affineTransforms.Count;
     }
 
-    public Matrix4x4[] GetTransformData() {
-        return affineTransforms.ToArray();
+    public List<Matrix4x4> GetAffineTransforms() {
+        return affineTransforms;
+    }
+
+    public ComputeBuffer GetAffineBuffer() {
+        return attractorsBuffer;
     }
 
     public Matrix4x4 GetFinalTransform() {
@@ -140,13 +147,22 @@ public class AffineTransformations : MonoBehaviour {
         }
 
         finalAffine = AffineFromInstructions(setBlender.GetFinalTransform());
+        
+        attractorsBuffer.SetData(affineTransforms.ToArray());
     }
 
     void OnEnable() {
+        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
+
         PopulateAffineBuffer();
     }
 
     void Update() {
         PopulateAffineBuffer();
+    }
+
+    void OnDisable() {
+        attractorsBuffer.Release();
+        attractorsBuffer = null;
     }
 }

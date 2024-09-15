@@ -23,8 +23,6 @@ public class ChaosGame : MonoBehaviour {
 
     private RenderParams renderParams;
 
-    private ComputeBuffer attractorsBuffer;
-
     private uint particleCount = 200000;
 
     private AffineTransformations affineTransformations;
@@ -65,8 +63,6 @@ public class ChaosGame : MonoBehaviour {
 
         particleUpdater.SetBuffer(0, "_PositionBuffer", positionBuffer);
         particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
-
-        attractorsBuffer = new ComputeBuffer(32, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Matrix4x4)));
     }
 
 
@@ -74,22 +70,13 @@ public class ChaosGame : MonoBehaviour {
         for (int i = 0; i < iterationCount; ++i) {
             particleUpdater.SetInt("_Seed", Mathf.CeilToInt(Random.Range(1, 1000000)));
             particleUpdater.SetBuffer(2, "_PositionBuffer", positionBuffer);
-            particleUpdater.SetBuffer(2, "_Transformations", attractorsBuffer);
+            particleUpdater.SetBuffer(2, "_Transformations", affineTransformations.GetAffineBuffer());
             particleUpdater.Dispatch(2, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
         }
     }
 
-    void FillAffineTransform(ref Matrix4x4 matrix, Vector4 r1, Vector4 r2, Vector4 r3) {
-        matrix.SetRow(0, r1);
-        matrix.SetRow(1, r2);
-        matrix.SetRow(2, r3);
-        matrix.SetRow(3, new Vector4(0, 0, 0, 1));
-    }
-
     void Update() {
         particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
-
-        attractorsBuffer.SetData(affineTransformations.GetTransformData());
 
         if (uncapped) {
             IterateSystem();
@@ -109,11 +96,9 @@ public class ChaosGame : MonoBehaviour {
 
     void OnDisable() {
         commandBuffer.Release();
-        attractorsBuffer.Release();
         positionBuffer.Release();
 
         commandBuffer = null;
-        attractorsBuffer = null;
         positionBuffer = null;
         commandData = null;
         particleMaterial = null;

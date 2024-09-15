@@ -74,7 +74,7 @@ public class DebugTransform : MonoBehaviour {
             debugIndex = affineTransformations.GetTransformCount() - 1;
 
         if (debugMode == DebugMode.InterpolatePositionFromOrigin)
-            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.GetTransformData()[debugIndex]);
+            particleUpdater.SetMatrix("_DebugTransform", affineTransformations.GetAffineTransforms()[debugIndex]);
         else if (debugMode == DebugMode.InterpolateAffineTransform)
             particleUpdater.SetMatrix("_DebugTransform", affineTransformations.InterpolateAffineTransform((int)affineIndices.x, (int)affineIndices.y, t));
         // else if (debugMode == DebugMode.InterpolateInstructions)
