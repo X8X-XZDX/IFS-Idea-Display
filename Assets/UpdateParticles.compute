@@ -7,6 +7,7 @@ RWStructuredBuffer<float4> _PositionBuffer;
 StructuredBuffer<float4x4> _Transformations;
 
 uint _Seed, _TransformationCount, _DebugIndex, _CubeResolution;
+int _BatchIndex, _ParticleCount;
 float _CubeSize;
 
 float hash(uint n) {
@@ -44,9 +45,9 @@ void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(8, 1, 1)] 
 void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
-    float4 currentPos = _PositionBuffer[id.x];
+    float4 currentPos = _PositionBuffer[id.x + (_BatchIndex * _ParticleCount)];
 
-    uint seed = _Seed + id.x + (currentPos.w + 1) + ceil(dot(currentPos.xyz, float3(1103, 1072, 947)));
+    uint seed = (_Seed + _BatchIndex * 100000) + id.x + (currentPos.w + 1) + ceil(dot(currentPos.xyz, float3(12, 43, 34)));
 
     float rand = hash(seed);
     uint index = floor(rand * (_TransformationCount));
@@ -54,7 +55,8 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     float4x4 attractor = _Transformations[index];
 
     float4 newPosition = float4(currentPos.xyz, 1.0f);
+
     newPosition = mul(attractor, newPosition);
 
-    _PositionBuffer[id.x] = float4(newPosition.xyz, index + 1114);
+    _PositionBuffer[id.x + (_BatchIndex * _ParticleCount)] = float4(newPosition.xyz, index + 1114);
 }

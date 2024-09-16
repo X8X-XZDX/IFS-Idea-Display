@@ -16,7 +16,7 @@ Shader "Custom/Particle" {
 			#pragma fragment fp
 
 			#include "UnityCG.cginc"
-			#define UNITY_INDIRECT_DRAW_ARGS IndirectDrawIndexedArgs
+			#define UNITY_INDIRECT_DRAW_ARGS IndirectDrawArgs
 			#include "UnityIndirect.cginc"
 			#include "UnityPBSLighting.cginc"
             #include "AutoLight.cginc"
@@ -30,7 +30,7 @@ Shader "Custom/Particle" {
 				float4 pos : SV_POSITION;
 				float3 worldPos : TEXCOORD0;
 				float3 normal : TEXCOORD2;
-				int index : TEXCOORD3;
+				uint index : TEXCOORD3;
 			};
 
 			StructuredBuffer<float4> _Positions;
@@ -41,17 +41,19 @@ Shader "Custom/Particle" {
 
 				v2f i;
 				
+				uint instanceCount = GetIndirectInstanceCount();
 				uint instanceID = GetIndirectInstanceID(svInstanceID);
+				uint commandID = GetCommandID(0);
 
-				float4 particlePos = _Positions[svInstanceID];
+				float4 particlePos = _Positions[svInstanceID + commandID * instanceCount];
 
 				float4 pos = v.vertex * 0.025f + mul(_FinalTransform, float4(particlePos.xyz, 1));
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
 				i.normal = UnityObjectToWorldNormal(v.normal);
+				// i.index = commandID;
 				i.index = particlePos.w;
-
 				return i;
 			}
 
@@ -72,6 +74,8 @@ Shader "Custom/Particle" {
 
 				// col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
 
+				col = pow(saturate(length(i.worldPos * 0.25f)), 0.75f) + 0.01f;
+				col += hash(length(i.worldPos.xyz) * 10000) * 0.05f;
 				return float4(col, 1);
 			}
 

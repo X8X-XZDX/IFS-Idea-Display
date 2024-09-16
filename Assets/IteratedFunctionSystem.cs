@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class IteratedFunctionSystem : MonoBehaviour {
     public AffineTransformations affineTransformations;
-    
+
     public Shader pointShader, cubeShader;
 
     public ComputeShader particleUpdater;
@@ -15,7 +15,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
         Cube
     } public ParticleMeshMode particleMeshMode;
 
-    public uint particleCount = 200000;
+    public uint particlesPerBatch = 200000;
+    public uint batchCount = 1;
 
     public bool uncapped = false;
 
@@ -30,28 +31,28 @@ public class IteratedFunctionSystem : MonoBehaviour {
     private RenderParams pointRenderParams, meshRenderParams;
 
     void InitializeCommandBuffers() {
-        pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawArgs.size);
+        pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawArgs.size);
+        pointCommandData = new GraphicsBuffer.IndirectDrawArgs[batchCount];
 
-        pointCommandData = new GraphicsBuffer.IndirectDrawArgs[1];
-        pointCommandData[0].instanceCount = particleCount;
-        pointCommandData[0].vertexCountPerInstance = 1;
+        quadCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        quadCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[batchCount];
+
+        cubeCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        cubeCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[batchCount];
+
+        for (int i = 0; i < batchCount; ++i) {
+            pointCommandData[i].instanceCount = particlesPerBatch;
+            pointCommandData[i].vertexCountPerInstance = batchCount;
+
+            quadCommandData[i].instanceCount = particlesPerBatch;
+            quadCommandData[i].indexCountPerInstance = quadMesh.GetIndexCount(0);
+
+            cubeCommandData[i].instanceCount = particlesPerBatch;
+            cubeCommandData[i].indexCountPerInstance = cubeMesh.GetIndexCount(0);
+        }
 
         pointCommandBuffer.SetData(pointCommandData);
-
-        quadCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
-
-        quadCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
-        quadCommandData[0].instanceCount = particleCount;
-        quadCommandData[0].indexCountPerInstance = quadMesh.GetIndexCount(0);
-
         quadCommandBuffer.SetData(quadCommandData);
-
-        cubeCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
-        
-        cubeCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
-        cubeCommandData[0].instanceCount = particleCount;
-        cubeCommandData[0].indexCountPerInstance = cubeMesh.GetIndexCount(0);
-
         cubeCommandBuffer.SetData(cubeCommandData);
     }
 
@@ -70,14 +71,20 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void InitializeParticleBuffer() {
-        positionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, (int)particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
+        int particleCount = (int)particlesPerBatch * (int)batchCount;
+        positionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, particleCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
 
         int cubeRootParticleCount = Mathf.CeilToInt(Mathf.Pow(particleCount, 1.0f / 3.0f));
 
         particleUpdater.SetInt("_CubeResolution", cubeRootParticleCount);
         particleUpdater.SetFloat("_CubeSize", 1.0f / cubeRootParticleCount);
         particleUpdater.SetBuffer(0, "_PositionBuffer", positionBuffer);
-        particleUpdater.Dispatch(0, Mathf.CeilToInt(particleCount / 8.0f), 1, 1);
+        particleUpdater.SetInt("_ParticleCount", (int)particlesPerBatch);
+
+        for (int batch = 0; batch < (int)batchCount; ++batch) {
+            particleUpdater.SetInt("_BatchIndex", batch);
+            particleUpdater.Dispatch(0, Mathf.CeilToInt(particlesPerBatch / 8.0f), 1, 1);
+        }
     }
 
 
@@ -131,6 +138,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
     
     public virtual void IterateSystem() {
+        int particleCount = (int)particlesPerBatch * (int)batchCount;
+
         particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
 
         particleUpdater.SetInt("_Seed", Mathf.CeilToInt(Random.Range(1, 1000000)));
@@ -146,9 +155,9 @@ public class IteratedFunctionSystem : MonoBehaviour {
         renderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
 
         if (particleMeshMode == ParticleMeshMode.Point)
-            Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, 1);
+            Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, (int)batchCount);
         else
-            Graphics.RenderMeshIndirect(renderParams, GetMesh(), commandBuffer, 1);
+            Graphics.RenderMeshIndirect(renderParams, GetMesh(), commandBuffer, (int)batchCount);
     }
 
     void Update() {
