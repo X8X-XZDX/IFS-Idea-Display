@@ -261,7 +261,7 @@ MonoBehaviour:
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particleMeshMode: 0
   particlesPerBatch: 100000
-  batchCount: 3
+  batchCount: 20
   uncapped: 1
 --- !u!4 &930339297
 Transform:
@@ -369,8 +369,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 0
-  randomInstructionCount: 8
+  affinePreset: 6
+  randomInstructionCount: 3
   resetToPreset: 1
   transformSet: []
   postTransform:
@@ -392,8 +392,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 5
-  randomInstructionCount: 8
+  affinePreset: 6
+  randomInstructionCount: 5
   resetToPreset: 1
   transformSet: []
   postTransform:
@@ -418,10 +418,10 @@ MonoBehaviour:
   set1: {fileID: 930339303}
   set2: {fileID: 930339304}
   t: 0
-  animate: 0
+  animate: 1
   speed: 1
   finalTransform:
-    scale: {x: 1, y: 1, z: 1}
+    scale: {x: 4, y: 4, z: 4}
     shearX: {x: 0, y: 0, z: 0}
     shearY: {x: 0, y: 0, z: 0}
     shearZ: {x: 0, y: 0, z: 0}
@@ -439,18 +439,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e736e87fafb0554f9f37774f5cef63f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scaleMin: {x: -1, y: -1, z: -1}
-  scaleMax: {x: 1, y: 1, z: 1}
-  shearXMin: {x: 0, y: 0, z: 0}
-  shearXMax: {x: 0, y: 0, z: 0}
-  shearYMin: {x: 0, y: 0, z: 0}
-  shearYMax: {x: 0, y: 0, z: 0}
-  shearZMin: {x: 0, y: 0, z: 0}
-  shearZMax: {x: 0, y: 0, z: 0}
-  rotateMin: {x: 0, y: 0, z: 0}
-  rotateMax: {x: 0, y: 0, z: 0}
-  translateMin: {x: -1, y: -1, z: -1}
-  translateMax: {x: 1, y: 1, z: 1}
+  scaleMin: {x: 0.4, y: 0.4, z: 0.4}
+  scaleMax: {x: 0.8, y: 0.8, z: 0.8}
+  shearXMin: {x: 0, y: -0.3, z: -0.3}
+  shearXMax: {x: 0, y: 0.3, z: 0.3}
+  shearYMin: {x: -0.3, y: -0.3, z: -0.3}
+  shearYMax: {x: 0.3, y: 0.3, z: -0.3}
+  shearZMin: {x: -0.3, y: -0.3, z: 0}
+  shearZMax: {x: 0.3, y: 0.3, z: 0}
+  rotateMin: {x: -8.15, y: -13.91, z: -19.54}
+  rotateMax: {x: 14.17, y: 18.8, z: 14.18}
+  translateMin: {x: -0.66, y: -0.33, z: -0.66}
+  translateMax: {x: 0.66, y: 0.33, z: 0.66}
   translationTemplate: 0
 --- !u!114 &930339307
 MonoBehaviour:

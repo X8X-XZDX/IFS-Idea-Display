@@ -3,7 +3,6 @@ Shader "Custom/Particle" {
 	SubShader {
 
 		Pass {
-			Cull Off
 
 			Tags {
 				"RenderType" = "Opaque"
@@ -67,15 +66,14 @@ Shader "Custom/Particle" {
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
 
-				i.worldPos *= 0.45f;
-
-				col *= float3(hash(i.index * 2), hash(i.index * 4), hash(i.index * 3));
+				// col *= float3(hash(i.index * 2), hash(i.index * 4), hash(i.index * 3));
 				// col = 1;
 
 				// col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
 
-				col = pow(saturate(length(i.worldPos * 0.25f)), 0.75f) + 0.01f;
-				col += hash(length(i.worldPos.xyz) * 10000) * 0.05f;
+				// col = pow(saturate(length(i.worldPos * 0.25f)), 0.75f) + 0.01f;
+				// col += hash(length(i.worldPos.xyz) * 10000) * 0.05f;
+				col = 0;
 				return float4(col, 1);
 			}
 

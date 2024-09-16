@@ -42,7 +42,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
         for (int i = 0; i < batchCount; ++i) {
             pointCommandData[i].instanceCount = particlesPerBatch;
-            pointCommandData[i].vertexCountPerInstance = batchCount;
+            pointCommandData[i].vertexCountPerInstance = 1;
 
             quadCommandData[i].instanceCount = particlesPerBatch;
             quadCommandData[i].indexCountPerInstance = quadMesh.GetIndexCount(0);
