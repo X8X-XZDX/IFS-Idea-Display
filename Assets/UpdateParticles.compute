@@ -49,12 +49,12 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     uint seed = _Seed + id.x + (currentPos.w + 1) + ceil(dot(currentPos.xyz, float3(1103, 1072, 947)));
 
     float rand = hash(seed);
-    uint index = floor(rand * _TransformationCount);
+    uint index = floor(rand * (_TransformationCount));
 
     float4x4 attractor = _Transformations[index];
 
     float4 newPosition = float4(currentPos.xyz, 1.0f);
     newPosition = mul(attractor, newPosition);
 
-    _PositionBuffer[id.x] = float4(newPosition.xyz, index);
+    _PositionBuffer[id.x] = float4(newPosition.xyz, index + 1114);
 }

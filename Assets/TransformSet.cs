@@ -52,35 +52,43 @@ public partial class TransformSet : MonoBehaviour {
         return identity;
     }
 
+    List<TransformInstructions> GetPreset(AffinePreset preset) {
+        switch (preset) {
+            case AffinePreset.SierpinskiTriangle2D:
+                return SierpinskiTriangle2D();
+            case AffinePreset.Vicsek2D:
+                return Vicsek2D();
+            case AffinePreset.SierpinskiCarpet2D:
+                return SierpinskiCarpet2D();
+            case AffinePreset.SierpinskiTriangle3D:
+                return SierpinskiTriangle3D();
+            case AffinePreset.Vicsek3D:
+                return Vicsek3D();
+            case AffinePreset.SierpinskiCarpet3D:
+                return SierpinskiCarpet3D();
+            case AffinePreset.Procedural:
+                return ProceduralInstructions();
+        }
+
+        return SierpinskiTriangle2D();
+    }
+
     public void ApplyPreset() {
         transformSet.Clear();
 
-        if (affinePreset == AffinePreset.SierpinskiTriangle2D) {
-            transformSet = SierpinskiTriangle2D();
-        }
+        transformSet = GetPreset(affinePreset);
 
-        if (affinePreset == AffinePreset.Vicsek2D) {
-            transformSet = Vicsek2D();
-        }
+        // Apply Translation Template
+        if (affinePreset == AffinePreset.Procedural && proceduralWizard.translationTemplate != AffinePreset.Procedural) {
+            List<TransformInstructions> templateSet = GetPreset(proceduralWizard.translationTemplate);
 
-        if (affinePreset == AffinePreset.SierpinskiCarpet2D) {
-            transformSet = SierpinskiCarpet2D();
-        }
+            for (int i = 0; i < transformSet.Count; ++i) {
+                TransformInstructions t = transformSet[i];
 
-        if (affinePreset == AffinePreset.SierpinskiTriangle3D) {
-            transformSet = SierpinskiTriangle3D();
-        }
+                t.translate += templateSet[i % templateSet.Count].translate;
 
-        if (affinePreset == AffinePreset.Vicsek3D) {
-            transformSet = Vicsek3D();
-        }
-
-        if (affinePreset == AffinePreset.SierpinskiCarpet3D) {
-            transformSet = SierpinskiCarpet3D();
-        }
-
-        if (affinePreset == AffinePreset.Procedural) {
-            transformSet = ProceduralInstructions();
+                transformSet[i] = t;
+            }
         }
     }
 

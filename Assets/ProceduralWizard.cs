@@ -1,6 +1,7 @@
 using System;
 using Random = UnityEngine.Random;
 using TransformInstructions = TransformSet.TransformInstructions;
+using AffinePreset = TransformSet.AffinePreset;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +19,7 @@ public class ProceduralWizard : MonoBehaviour {
     public Vector3 rotateMax;
     public Vector3 translateMin;
     public Vector3 translateMax;
+    public AffinePreset translationTemplate;
 
     Vector3 GenerateRandomVector(Vector3 min, Vector3 max) {
         return new Vector3(Random.Range(min.x, max.x), Random.Range(min.y, max.y), Random.Range(min.z, max.z));

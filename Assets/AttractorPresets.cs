@@ -141,27 +141,27 @@ public partial class TransformSet : MonoBehaviour {
         TransformInstructions t = new TransformInstructions();
 
         Vector3[] translations = {
-        new Vector3(-0.5f, -0.5f, -0.5f),
-        new Vector3(-0.5f, -0.5f, 0.5f),
-        new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(0.5f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, -0.5f),
-        new Vector3(-0.5f, 0.5f, 0.5f),
-        new Vector3(0.5f, 0.5f, -0.5f),
-        new Vector3(0.5f, 0.5f, 0.5f),
-        new Vector3(-0.5f, 0.5f, 0.0f),
-        new Vector3(0.5f, 0.5f, 0.0f),
-        new Vector3(-0.5f, -0.5f, 0.0f),
-        new Vector3(0.5f, -0.5f, 0.0f),
-        new Vector3(0.0f, 0.5f, -0.5f),
-        new Vector3(0.0f, 0.5f, 0.5f),
-        new Vector3(0.0f, -0.5f, -0.5f),
-        new Vector3(0.0f, -0.5f, 0.5f),
-        new Vector3(-0.5f, 0.0f, -0.5f),
-        new Vector3(0.5f, 0.0f, 0.5f),
-        new Vector3(0.5f, 0.0f, -0.5f),
-        new Vector3(-0.5f, 0.0f, 0.5f)
-    };
+            new Vector3(-0.5f, -0.5f, -0.5f),
+            new Vector3(-0.5f, -0.5f, 0.5f),
+            new Vector3(0.5f, -0.5f, -0.5f),
+            new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(-0.5f, 0.5f, -0.5f),
+            new Vector3(-0.5f, 0.5f, 0.5f),
+            new Vector3(0.5f, 0.5f, -0.5f),
+            new Vector3(0.5f, 0.5f, 0.5f),
+            new Vector3(-0.5f, 0.5f, 0.0f),
+            new Vector3(0.5f, 0.5f, 0.0f),
+            new Vector3(-0.5f, -0.5f, 0.0f),
+            new Vector3(0.5f, -0.5f, 0.0f),
+            new Vector3(0.0f, 0.5f, -0.5f),
+            new Vector3(0.0f, 0.5f, 0.5f),
+            new Vector3(0.0f, -0.5f, -0.5f),
+            new Vector3(0.0f, -0.5f, 0.5f),
+            new Vector3(-0.5f, 0.0f, -0.5f),
+            new Vector3(0.5f, 0.0f, 0.5f),
+            new Vector3(0.5f, 0.0f, -0.5f),
+            new Vector3(-0.5f, 0.0f, 0.5f)
+        };
 
         t.scale = new Vector3(0.33f, 0.33f, 0.33f);
 
@@ -177,7 +177,9 @@ public partial class TransformSet : MonoBehaviour {
         List<TransformInstructions> instructions = new List<TransformInstructions>();
 
         for (int i = 0; i < this.randomInstructionCount; ++i) {
-            instructions.Add(proceduralWizard.GenerateRandomInstructions());
+            TransformInstructions t = proceduralWizard.GenerateRandomInstructions();
+
+            instructions.Add(t);
         }
 
         return instructions;
