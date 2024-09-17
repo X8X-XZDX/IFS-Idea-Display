@@ -9,51 +9,30 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     public ComputeShader particleUpdater;
 
-    public enum ParticleMeshMode {
-        Point = 0,
-        Quad,
-        Cube
-    } public ParticleMeshMode particleMeshMode;
-
     public uint particlesPerBatch = 200000;
     public uint batchCount = 1;
 
     public bool uncapped = false;
 
-    private Mesh quadMesh, cubeMesh;
+    private Mesh pointMesh, quadMesh, cubeMesh;
     private Material pointMaterial, cubeMaterial;
 
     public GraphicsBuffer positionBuffer;
-    private GraphicsBuffer pointCommandBuffer, quadCommandBuffer, cubeCommandBuffer;
-    private GraphicsBuffer.IndirectDrawArgs[] pointCommandData;
-    private GraphicsBuffer.IndirectDrawIndexedArgs[] quadCommandData, cubeCommandData;
+    private GraphicsBuffer pointCommandBuffer;
+    private GraphicsBuffer.IndirectDrawIndexedArgs[] pointCommandData;
 
     private RenderParams pointRenderParams, meshRenderParams;
 
     void InitializeCommandBuffers() {
-        pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawArgs.size);
-        pointCommandData = new GraphicsBuffer.IndirectDrawArgs[batchCount];
+        pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        pointCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
 
-        quadCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawIndexedArgs.size);
-        quadCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[batchCount];
-
-        cubeCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, (int)batchCount, GraphicsBuffer.IndirectDrawIndexedArgs.size);
-        cubeCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[batchCount];
-
-        for (int i = 0; i < batchCount; ++i) {
-            pointCommandData[i].instanceCount = particlesPerBatch;
-            pointCommandData[i].vertexCountPerInstance = 1;
-
-            quadCommandData[i].instanceCount = particlesPerBatch;
-            quadCommandData[i].indexCountPerInstance = quadMesh.GetIndexCount(0);
-
-            cubeCommandData[i].instanceCount = particlesPerBatch;
-            cubeCommandData[i].indexCountPerInstance = cubeMesh.GetIndexCount(0);
+        for (int i = 0; i < 1; ++i) {
+            pointCommandData[i].instanceCount = particlesPerBatch * batchCount;
+            pointCommandData[i].indexCountPerInstance = 1;
         }
 
         pointCommandBuffer.SetData(pointCommandData);
-        quadCommandBuffer.SetData(quadCommandData);
-        cubeCommandBuffer.SetData(cubeCommandData);
     }
 
     void InitializeRenderParams() {
@@ -62,12 +41,6 @@ public class IteratedFunctionSystem : MonoBehaviour {
         pointRenderParams.matProps = new MaterialPropertyBlock();
         
         pointRenderParams.matProps.SetBuffer("_Positions", positionBuffer);
-
-        meshRenderParams = new RenderParams(cubeMaterial);
-        meshRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
-        meshRenderParams.matProps = new MaterialPropertyBlock();
-        
-        meshRenderParams.matProps.SetBuffer("_Positions", positionBuffer);
     }
 
     void InitializeParticleBuffer() {
@@ -89,52 +62,23 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
 
     void OnEnable() {
-        quadMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
-        cubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        pointMesh = new Mesh();
+
+        Vector3[] vertices = new Vector3[1];
+        vertices[0] = new Vector3(0, 0, 0);
+
+        pointMesh.vertices = vertices;
+
+        int[] indices = new int[1];
+        indices[0] = 0;
+
+        pointMesh.SetIndices(indices, MeshTopology.Points, 0, false, 0);
 
         pointMaterial = new Material(pointShader);
-        cubeMaterial = new Material(cubeShader);
 
         InitializeParticleBuffer();
         InitializeCommandBuffers();
         InitializeRenderParams();
-    }
-
-    GraphicsBuffer GetCommandBuffer() {
-        switch(particleMeshMode) {
-            case ParticleMeshMode.Point:
-                return pointCommandBuffer;
-            case ParticleMeshMode.Quad:
-                return quadCommandBuffer;
-            case ParticleMeshMode.Cube:
-                return cubeCommandBuffer;
-        }
-
-        return pointCommandBuffer;
-    }
-
-    RenderParams GetRenderParams() {
-        switch(particleMeshMode) {
-            case ParticleMeshMode.Point:
-                return pointRenderParams;
-            case ParticleMeshMode.Quad:
-                return meshRenderParams;
-            case ParticleMeshMode.Cube:
-                return meshRenderParams;
-        }
-
-        return pointRenderParams;
-    }
-
-    Mesh GetMesh() {
-        switch(particleMeshMode) {
-            case ParticleMeshMode.Quad:
-                return quadMesh;
-            case ParticleMeshMode.Cube:
-                return cubeMesh;
-        }
-
-        return quadMesh;
     }
     
     public virtual void IterateSystem() {
@@ -149,15 +93,9 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void InstanceParticles() {
-        GraphicsBuffer commandBuffer = GetCommandBuffer();
-        RenderParams renderParams = GetRenderParams();
+        // pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
 
-        renderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
-
-        if (particleMeshMode == ParticleMeshMode.Point)
-            Graphics.RenderPrimitivesIndirect(renderParams, MeshTopology.Points, commandBuffer, (int)batchCount);
-        else
-            Graphics.RenderMeshIndirect(renderParams, GetMesh(), commandBuffer, (int)batchCount);
+        Graphics.RenderMeshIndirect(pointRenderParams, pointMesh, pointCommandBuffer, (int)1);
     }
 
     void Update() {
@@ -174,8 +112,6 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     void OnDisable() {
         pointCommandBuffer.Release();
-        quadCommandBuffer.Release();
-        cubeCommandBuffer.Release();
         positionBuffer.Release();
     }
 }

@@ -259,9 +259,8 @@ MonoBehaviour:
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   cubeShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  particleMeshMode: 0
-  particlesPerBatch: 100000
-  batchCount: 20
+  particlesPerBatch: 262144
+  batchCount: 10
   uncapped: 1
 --- !u!4 &930339297
 Transform:
@@ -447,8 +446,8 @@ MonoBehaviour:
   shearYMax: {x: 0.3, y: 0.3, z: -0.3}
   shearZMin: {x: -0.3, y: -0.3, z: 0}
   shearZMax: {x: 0.3, y: 0.3, z: 0}
-  rotateMin: {x: -8.15, y: -13.91, z: -19.54}
-  rotateMax: {x: 14.17, y: 18.8, z: 14.18}
+  rotateMin: {x: -20.82, y: -30.1, z: -56}
+  rotateMax: {x: 25.44, y: 38, z: 30.8}
   translateMin: {x: -0.66, y: -0.33, z: -0.66}
   translateMax: {x: 0.66, y: 0.33, z: 0.66}
   translationTemplate: 0
@@ -468,7 +467,6 @@ MonoBehaviour:
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   cubeShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  particleMeshMode: 0
   particlesPerBatch: 200000
   batchCount: 1
   uncapped: 1
@@ -509,7 +507,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.09349413, g: 0.097491704, b: 0.103773594, a: 0}
+  m_BackGroundColor: {r: 0.84313726, g: 0.87058824, b: 0.8980392, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

@@ -3,6 +3,7 @@ Shader "Custom/Particle" {
 	SubShader {
 
 		Pass {
+			ZWrite Off
 
 			Tags {
 				"RenderType" = "Opaque"
@@ -46,7 +47,8 @@ Shader "Custom/Particle" {
 
 				float4 particlePos = _Positions[svInstanceID + commandID * instanceCount];
 
-				float4 pos = v.vertex * 0.025f + mul(_FinalTransform, float4(particlePos.xyz, 1));
+				float4 pos = v.vertex + mul(_FinalTransform, float4(particlePos.xyz, 1));
+				// float4 pos = v.vertex + float4(particlePos.xyz * 5, 1.0f);
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
