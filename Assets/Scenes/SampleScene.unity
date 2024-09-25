@@ -368,7 +368,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 6
+  affinePreset: 3
   randomInstructionCount: 3
   resetToPreset: 1
   transformSet: []
@@ -417,7 +417,7 @@ MonoBehaviour:
   set1: {fileID: 930339303}
   set2: {fileID: 930339304}
   t: 0
-  animate: 1
+  animate: 0
   speed: 1
   finalTransform:
     scale: {x: 4, y: 4, z: 4}
@@ -548,7 +548,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

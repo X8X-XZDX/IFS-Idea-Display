@@ -3,7 +3,7 @@ Shader "Custom/Particle" {
 	SubShader {
 
 		Pass {
-			ZWrite Off
+			ZWrite On
 
 			Tags {
 				"RenderType" = "Opaque"
@@ -35,6 +35,7 @@ Shader "Custom/Particle" {
 
 			StructuredBuffer<float4> _Positions;
 			float4x4 _FinalTransform;
+			int _BatchIndex;
 
 			v2f vp(VertexData v, uint svInstanceID : SV_INSTANCEID) {
 				InitIndirectDrawArgs(0);
@@ -48,13 +49,14 @@ Shader "Custom/Particle" {
 				float4 particlePos = _Positions[svInstanceID + commandID * instanceCount];
 
 				// float4 pos = v.vertex + mul(_FinalTransform, float4(particlePos.xyz, 1));
-				float4 pos = v.vertex + float4(particlePos.xyz * 5, 1.0f);
+				float4 pos = v.vertex + float4(particlePos.xyz * 2, 1.0f);
+				// pos.x += _BatchIndex * 4;
 
 				i.pos = UnityObjectToClipPos(pos);
 				i.worldPos = mul(unity_ObjectToWorld, pos);
 				i.normal = UnityObjectToWorldNormal(v.normal);
-				// i.index = commandID;
-				i.index = particlePos.w;
+				i.index = commandID;
+				// i.index = particlePos.w;
 				return i;
 			}
 
@@ -68,7 +70,7 @@ Shader "Custom/Particle" {
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
 
-				// col *= float3(hash(i.index * 2), hash(i.index * 4), hash(i.index * 3));
+				// col *= float3(hash(_BatchIndex * 2), hash(_BatchIndex * 4), hash(_BatchIndex * 3));
 				// col = 1;
 
 				// col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
