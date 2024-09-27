@@ -257,11 +257,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   affineTransformations: {fileID: 930339299}
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
-  cubeShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  particlesPerBatch: 262144
-  batchCount: 10
+  particlesPerBatch: 1048576
+  batchCount: 40
   uncapped: 1
+  pointCloudMeshes: []
 --- !u!4 &930339297
 Transform:
   m_ObjectHideFlags: 0
@@ -368,7 +368,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d618dbd71e5db5841bb8c53a8307cfde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affinePreset: 3
+  affinePreset: 6
   randomInstructionCount: 3
   resetToPreset: 1
   transformSet: []
@@ -392,7 +392,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   affinePreset: 6
-  randomInstructionCount: 5
+  randomInstructionCount: 4
   resetToPreset: 1
   transformSet: []
   postTransform:
@@ -417,7 +417,7 @@ MonoBehaviour:
   set1: {fileID: 930339303}
   set2: {fileID: 930339304}
   t: 0
-  animate: 0
+  animate: 1
   speed: 1
   finalTransform:
     scale: {x: 4, y: 4, z: 4}
@@ -439,11 +439,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaleMin: {x: 0.4, y: 0.4, z: 0.4}
-  scaleMax: {x: 0.8, y: 0.8, z: 0.8}
+  scaleMax: {x: 0.8, y: 0.6, z: 0.8}
   shearXMin: {x: 0, y: -0.3, z: -0.3}
   shearXMax: {x: 0, y: 0.3, z: 0.3}
   shearYMin: {x: -0.3, y: -0.3, z: -0.3}
-  shearYMax: {x: 0.3, y: 0.3, z: -0.3}
+  shearYMax: {x: 0.3, y: 0.3, z: 0.3}
   shearZMin: {x: -0.3, y: -0.3, z: 0}
   shearZMax: {x: 0.3, y: 0.3, z: 0}
   rotateMin: {x: -20.82, y: -30.1, z: -56}
@@ -465,11 +465,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   affineTransformations: {fileID: 0}
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
-  cubeShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 200000
   batchCount: 1
   uncapped: 1
+  pointCloudMeshes: []
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -507,7 +507,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.84313726, g: 0.87058824, b: 0.8980392, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

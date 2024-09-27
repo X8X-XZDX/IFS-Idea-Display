@@ -2,7 +2,26 @@
 #pragma kernel ApplyDebugTransform
 #pragma kernel AffineTransformChaos
 
-RWStructuredBuffer<float4> _PositionBuffer;
+#define SIZEOF_UINT 4
+#define SIZEOF_FLOAT3 12
+
+RWByteAddressBuffer _VertexBuffer, _IndexBuffer;
+
+void WriteVertex(uint offset, float3 v) {
+    uint addr = offset * SIZEOF_FLOAT3;
+    _VertexBuffer.Store3(addr, asuint(v));
+}
+
+float3 ReadVertex(uint offset) {
+    uint addr = offset * SIZEOF_FLOAT3;
+
+    return asfloat(_VertexBuffer.Load3(addr));
+}
+
+void WriteIndex(uint offset, uint i) {
+    uint addr = offset * SIZEOF_UINT;
+    _IndexBuffer.Store(addr, i);
+}
 
 StructuredBuffer<float4x4> _Transformations;
 
@@ -26,37 +45,41 @@ float3 to3D(uint idx) {
     return float3(x, y, z);
 }
 
-[numthreads(8,1,1)]
+[numthreads(64,1,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
-    _PositionBuffer[id.x] = float4(to3D(id.x) * _CubeSize, 1);
+    float3 pos = to3D(id.x) * _CubeSize;
+    uint index = id.x;
+
+    WriteVertex(id.x, pos);
+    WriteIndex(id.x, index);
 }
 
 float4x4 _DebugTransform;
 
 [numthreads(8, 1, 1)] 
 void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
-    float4 currentPos = _PositionBuffer[id.x];
+    // float4 currentPos = _PositionBuffer[id.x];
 
-    float4 newPosition = float4(currentPos.xyz, 1.0f);
-    newPosition = mul(_DebugTransform, newPosition);
+    // float4 newPosition = float4(currentPos.xyz, 1.0f);
+    // newPosition = mul(_DebugTransform, newPosition);
 
-    _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
+    // _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }
 
-[numthreads(8, 1, 1)] 
+[numthreads(64, 1, 1)] 
 void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
-    float4 currentPos = _PositionBuffer[id.x + (_BatchIndex * _ParticleCount)];
+    float3 currentPos = ReadVertex(id.x);
 
-    uint seed = (_Seed + _BatchIndex * 100000) + id.x + (currentPos.w + 1) + ceil(dot(currentPos.xyz, float3(12, 43, 34)));
+    uint seed = (_Seed + _BatchIndex * 100000) + id.x + ceil(dot(currentPos.xyz, float3(1112, 4123, 3324)));
 
     float rand = hash(seed);
     uint index = floor(rand * (_TransformationCount));
 
     float4x4 attractor = _Transformations[index];
 
-    float4 newPosition = float4(currentPos.xyz, 1.0f);
+    float4 newPosition = float4(currentPos, 1.0f);
 
     newPosition = mul(attractor, newPosition);
 
-    _PositionBuffer[id.x + (_BatchIndex * _ParticleCount)] = float4(newPosition.xyz, index + 1114);
+    WriteVertex(id.x, newPosition.xyz);
 }

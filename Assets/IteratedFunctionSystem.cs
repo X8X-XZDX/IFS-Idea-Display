@@ -1,11 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Unity.Collections.LowLevel.Unsafe;
 
 public class IteratedFunctionSystem : MonoBehaviour {
     public AffineTransformations affineTransformations;
 
-    public Shader pointShader, cubeShader;
+    public Shader pointShader;
 
     public ComputeShader particleUpdater;
 
@@ -14,52 +17,46 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     public bool uncapped = false;
 
-    private Mesh pointMesh, quadMesh, cubeMesh;
-    private Material pointMaterial, cubeMaterial;
+    public Mesh[] pointCloudMeshes;
+    private Material pointMaterial;
 
-    public GraphicsBuffer[] positionBuffers;
-    private GraphicsBuffer pointCommandBuffer;
-    private GraphicsBuffer.IndirectDrawIndexedArgs[] pointCommandData;
+    private RenderParams pointRenderParams;
 
-    private RenderParams[] pointRenderParams;
-
-    void InitializeCommandBuffers() {
-        pointCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
-        pointCommandData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
-
-        pointCommandData[0].instanceCount = particlesPerBatch;
-        pointCommandData[0].indexCountPerInstance = 1;
-
-        pointCommandBuffer.SetData(pointCommandData);
-    }
+    [NonSerialized]
+    public int threadsPerGroup = 64;
 
     void InitializeRenderParams() {
-        pointRenderParams = new RenderParams[batchCount];
-
-        for (int i = 0; i < batchCount; ++i) {
-            pointRenderParams[i] = new RenderParams(pointMaterial);
-            pointRenderParams[i].worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
-            pointRenderParams[i].matProps = new MaterialPropertyBlock();
-            
-            pointRenderParams[i].matProps.SetBuffer("_Positions", positionBuffers[i]);
-            pointRenderParams[i].matProps.SetInt("_BatchIndex", i);
-        }
+        pointRenderParams = new RenderParams(pointMaterial);
+        pointRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
+        // pointRenderParams.matProps = new MaterialPropertyBlock();
     }
 
-    void InitializeParticleBuffer() {
-        positionBuffers = new GraphicsBuffer[batchCount];
-        for (int i = 0; i < batchCount; ++i)
-            positionBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.Structured, (int)particlesPerBatch, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Vector4)));
+    void InitializeMeshes() {
+        pointCloudMeshes = new Mesh[batchCount];
 
-        int cubeRootParticleCount = Mathf.CeilToInt(Mathf.Pow(particlesPerBatch, 1.0f / 3.0f));
+        for (int i = 0; i < batchCount; ++i) {
+            // Create point cloud mesh
+            pointCloudMeshes[i] = new Mesh();
 
-        particleUpdater.SetInt("_CubeResolution", cubeRootParticleCount);
-        particleUpdater.SetFloat("_CubeSize", 1.0f / cubeRootParticleCount);
-        particleUpdater.SetInt("_ParticleCount", (int)particlesPerBatch);
+            pointCloudMeshes[i].vertexBufferTarget |= GraphicsBuffer.Target.Raw;
+            pointCloudMeshes[i].indexBufferTarget |= GraphicsBuffer.Target.Raw;
 
-        for (int i = 0; i < (int)batchCount; ++i) {
-            particleUpdater.SetBuffer(0, "_PositionBuffer", positionBuffers[i]);
-            particleUpdater.Dispatch(0, Mathf.CeilToInt(particlesPerBatch / 8.0f), 1, 1);
+            var vp = new VertexAttributeDescriptor(UnityEngine.Rendering.VertexAttribute.Position, VertexAttributeFormat.Float32, 3);
+
+            pointCloudMeshes[i].SetVertexBufferParams((int)particlesPerBatch, vp);
+            pointCloudMeshes[i].SetIndexBufferParams((int)particlesPerBatch, IndexFormat.UInt32);
+
+            pointCloudMeshes[i].SetSubMesh(0, new SubMeshDescriptor(0, (int)particlesPerBatch, MeshTopology.Points), MeshUpdateFlags.DontRecalculateBounds);
+
+            // Initialize point cloud vertices
+            int cubeRootParticleCount = Mathf.CeilToInt(Mathf.Pow(particlesPerBatch, 1.0f / 3.0f));
+            particleUpdater.SetInt("_CubeResolution", cubeRootParticleCount);
+            particleUpdater.SetFloat("_CubeSize", 1.0f / cubeRootParticleCount);
+            particleUpdater.SetInt("_ParticleCount", (int)particlesPerBatch);
+
+            particleUpdater.SetBuffer(0, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
+            particleUpdater.SetBuffer(0, "_IndexBuffer", pointCloudMeshes[i].GetIndexBuffer());
+            particleUpdater.Dispatch(0, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
         }
     }
 
@@ -67,38 +64,27 @@ public class IteratedFunctionSystem : MonoBehaviour {
     void OnEnable() {
         // Debug.Log(SystemInfo.graphicsDeviceName);
 
-        pointMesh = new Mesh();
-
-        Vector3[] vertices = new Vector3[1];
-        vertices[0] = new Vector3(0, 0, 0);
-
-        pointMesh.vertices = vertices;
-
-        int[] indices = new int[1];
-        indices[0] = 0;
-
-        pointMesh.SetIndices(indices, MeshTopology.Points, 0, false, 0);
-
+        // UnsafeUtility.SetLeakDetectionMode(Unity.Collections.NativeLeakDetectionMode.Enabled);
         pointMaterial = new Material(pointShader);
 
-        InitializeParticleBuffer();
-        InitializeCommandBuffers();
+        InitializeMeshes();
         InitializeRenderParams();
     }
     
     public virtual void IterateSystem() {
         for (int i = 0; i < batchCount; ++i) {
             particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
-            particleUpdater.SetInt("_Seed", Mathf.CeilToInt(Random.Range(1, 1000000)));
-            particleUpdater.SetBuffer(2, "_PositionBuffer", positionBuffers[i]);
+            particleUpdater.SetInt("_Seed", Mathf.CeilToInt(UnityEngine.Random.Range(1, 1000000)));
+            particleUpdater.SetBuffer(2, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
             particleUpdater.SetBuffer(2, "_Transformations", affineTransformations.GetAffineBuffer());
-            particleUpdater.Dispatch(2, Mathf.CeilToInt(particlesPerBatch / 8.0f), 1, 1);
+            particleUpdater.Dispatch(2, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
         }
     }
 
-    void InstanceParticles() {
-        for (int i = 0; i < batchCount; ++i)
-            Graphics.RenderMeshIndirect(pointRenderParams[i], pointMesh, pointCommandBuffer, 1);
+    void DrawParticles() {
+        for (int i = 0; i < batchCount; ++i) {
+            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.Scale(new Vector3(2.0f, 2.0f, 2.0f)));
+        }
     }
 
     void Update() {
@@ -110,12 +96,17 @@ public class IteratedFunctionSystem : MonoBehaviour {
             }
         }
 
-        InstanceParticles();
+        DrawParticles();
     }
 
     void OnDisable() {
-        pointCommandBuffer.Release();
-        for (int i = 0; i < batchCount; ++i)
-            positionBuffers[i].Release();
+        for (int i = 0; i < batchCount; ++i) {
+            var vertBuffer = pointCloudMeshes[i].GetVertexBuffer(0);
+            var indexBuffer = pointCloudMeshes[i].GetIndexBuffer();
+
+            vertBuffer.Release();
+            indexBuffer.Release();
+            UnityEngine.Object.Destroy(pointCloudMeshes[i]);
+        }
     }
 }
