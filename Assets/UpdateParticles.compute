@@ -1,6 +1,7 @@
 #pragma kernel InitializeParticles
 #pragma kernel ApplyDebugTransform
 #pragma kernel AffineTransformChaos
+#pragma kernel AffineTransformIterated
 
 #define SIZEOF_UINT 4
 #define SIZEOF_FLOAT3 12
@@ -82,4 +83,20 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     newPosition = mul(attractor, newPosition);
 
     WriteVertex(id.x, newPosition.xyz);
+}
+
+uint _GenerationOffset, _GenerationLimit;
+
+[numthreads(64, 1, 1)] 
+void AffineTransformIterated(uint3 id : SV_DispatchThreadID) {
+    uint threadID = id.x + _GenerationOffset;
+
+    if (threadID < _GenerationLimit) { // This ensures threads that exceed the bounds of the current memory block don't do work and overwrite data, which shows how this is kind of not a good method for compute lol
+        float3 seedPos = ReadVertex(floor((threadID - 1) / _TransformationCount));
+
+        float4x4 attractor = _Transformations[threadID % _TransformationCount];
+        float4 newPosition = mul(attractor, float4(seedPos, 1.0f));
+        
+        WriteVertex(threadID, newPosition.xyz);
+    }
 }

@@ -259,7 +259,7 @@ MonoBehaviour:
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 1048576
-  batchCount: 40
+  batchCount: 20
   uncapped: 1
   pointCloudMeshes: []
 --- !u!4 &930339297

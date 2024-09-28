@@ -72,13 +72,44 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
     
     public virtual void IterateSystem() {
-        for (int i = 0; i < batchCount; ++i) {
-            particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
-            particleUpdater.SetInt("_Seed", Mathf.CeilToInt(UnityEngine.Random.Range(1, 1000000)));
-            particleUpdater.SetBuffer(2, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
-            particleUpdater.SetBuffer(2, "_Transformations", affineTransformations.GetAffineBuffer());
-            particleUpdater.Dispatch(2, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+        // Reset System
+        int cubeRootParticleCount = Mathf.CeilToInt(Mathf.Pow(particlesPerBatch, 1.0f / 3.0f));
+        particleUpdater.SetInt("_CubeResolution", cubeRootParticleCount);
+        particleUpdater.SetFloat("_CubeSize", 0);
+
+        particleUpdater.SetBuffer(0, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
+        particleUpdater.SetBuffer(0, "_IndexBuffer", pointCloudMeshes[0].GetIndexBuffer());
+        particleUpdater.Dispatch(0, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+
+        // Seed First Iteration
+        int transformCount = affineTransformations.GetTransformCount();
+
+        particleUpdater.SetInt("_TransformationCount", transformCount);
+        particleUpdater.SetInt("_GenerationOffset", 0);
+        particleUpdater.SetInt("_GenerationLimit", 3);
+        particleUpdater.SetBuffer(3, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
+        particleUpdater.SetBuffer(3, "_Transformations", affineTransformations.GetAffineBuffer());
+        particleUpdater.Dispatch(3, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+
+        int iteratedParticles = 3;
+        int previousGenerationSize = 3;
+        while (iteratedParticles < particlesPerBatch) {
+            int generationSize = previousGenerationSize * transformCount;
+
+            particleUpdater.SetInt("_GenerationOffset", iteratedParticles);
+            particleUpdater.SetInt("_GenerationLimit", (int)Mathf.Clamp(iteratedParticles + generationSize, 0, particlesPerBatch));
+
+            particleUpdater.SetBuffer(3, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
+            particleUpdater.SetBuffer(3, "_Transformations", affineTransformations.GetAffineBuffer());
+
+            
+            particleUpdater.Dispatch(3, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+            
+
+            iteratedParticles += generationSize;
+            previousGenerationSize = generationSize;
         }
+
     }
 
     void DrawParticles() {
