@@ -60,6 +60,49 @@ public class IteratedFunctionSystem : MonoBehaviour {
         }
     }
 
+    public Shader voxelShader;
+    public Mesh voxelMesh;
+    GraphicsBuffer voxelGrid, commandBuffer;
+    GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
+    public int voxelBounds;
+    public float voxelSize;
+    public bool renderVoxels = false;
+    private int voxelDimension, voxelCount;
+    private Material voxelMaterial;
+    private RenderParams renderParams;
+
+    void InitializeVoxelGrid() {
+        voxelMaterial = new Material(voxelShader);
+
+        voxelDimension = Mathf.FloorToInt(voxelBounds / voxelSize);
+        voxelCount = voxelDimension * voxelDimension * voxelDimension;
+
+        Debug.Log("Grid Dimension: " + voxelDimension.ToString());
+        Debug.Log("Voxel Count: " + voxelCount.ToString());
+
+        voxelGrid = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(int)));
+
+        // Clear Voxel Grid
+        particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
+        particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+
+        renderParams = new RenderParams(voxelMaterial);
+        renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
+        renderParams.matProps = new MaterialPropertyBlock();
+
+        renderParams.matProps.SetBuffer("_VoxelGrid", voxelGrid);
+        renderParams.matProps.SetFloat("_VoxelSize", voxelSize);
+        renderParams.matProps.SetInt("_GridSize", voxelDimension);
+        renderParams.matProps.SetInt("_GridBounds", voxelBounds);
+
+        commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        commandIndexedData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
+        commandIndexedData[0].instanceCount = System.Convert.ToUInt32(voxelCount);
+        commandIndexedData[0].indexCountPerInstance = voxelMesh.GetIndexCount(0);
+
+        commandBuffer.SetData(commandIndexedData);
+    }
+
 
     void OnEnable() {
         // Debug.Log(SystemInfo.graphicsDeviceName);
@@ -69,6 +112,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
         InitializeMeshes();
         InitializeRenderParams();
+
+        InitializeVoxelGrid();
     }
     
     public virtual void IterateSystem() {
@@ -112,22 +157,35 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     }
 
+    void Voxelize() {
+        // Clear Voxel Grid
+        particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
+        particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+
+        particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
+        particleUpdater.SetInt("_GridBounds", voxelBounds);
+        particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
+        particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
+        particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+    }
+
     void DrawParticles() {
         for (int i = 0; i < batchCount; ++i) {
-            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.Scale(new Vector3(2.0f, 2.0f, 2.0f)));
+            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, affineTransformations.GetFinalTransform());
         }
     }
 
     void Update() {
-        if (uncapped) {
+        if (uncapped || Input.GetKeyDown("space")) {
             IterateSystem();
-        } else {
-            if (Input.GetKeyDown("space")) {
-                IterateSystem();
-            }
+            Voxelize();
         }
 
         DrawParticles();
+
+        if (renderVoxels) {
+            Graphics.RenderMeshIndirect(renderParams, voxelMesh, commandBuffer, 1);
+        }
     }
 
     void OnDisable() {
@@ -139,5 +197,13 @@ public class IteratedFunctionSystem : MonoBehaviour {
             indexBuffer.Release();
             UnityEngine.Object.Destroy(pointCloudMeshes[i]);
         }
+
+        commandBuffer.Release();
+        voxelGrid.Release();
+    }
+
+    void OnDrawGizmos() {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one * voxelBounds);
     }
 }

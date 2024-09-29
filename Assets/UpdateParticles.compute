@@ -2,6 +2,8 @@
 #pragma kernel ApplyDebugTransform
 #pragma kernel AffineTransformChaos
 #pragma kernel AffineTransformIterated
+#pragma kernel ClearVoxelBuffer
+#pragma kernel VoxelizePositions
 
 #define SIZEOF_UINT 4
 #define SIZEOF_FLOAT3 12
@@ -37,7 +39,7 @@ float hash(uint n) {
     return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
 }
 
-float3 to3D(uint idx) {
+float3 otherTo3D(uint idx) {
     uint3 voxelRes = _CubeResolution;
     uint x = idx % (voxelRes.x);
     uint y = (idx / voxelRes.x) % voxelRes.y;
@@ -48,7 +50,7 @@ float3 to3D(uint idx) {
 
 [numthreads(64,1,1)]
 void InitializeParticles(uint3 id : SV_DispatchThreadID) {
-    float3 pos = to3D(id.x) * _CubeSize;
+    float3 pos = otherTo3D(id.x) * _CubeSize;
     uint index = id.x;
 
     WriteVertex(id.x, pos);
@@ -82,6 +84,8 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
 
     newPosition = mul(attractor, newPosition);
 
+    if (dot(newPosition, newPosition) > 100) newPosition = 0; // If particle shot off to infinity for some stupid reason then reset it to the origin
+
     WriteVertex(id.x, newPosition.xyz);
 }
 
@@ -99,4 +103,37 @@ void AffineTransformIterated(uint3 id : SV_DispatchThreadID) {
         
         WriteVertex(threadID, newPosition.xyz);
     }
+}
+
+RWStructuredBuffer<int> _VoxelGrid;
+uint _GridSize, _GridBounds;
+
+uint to1D(uint3 pos) {
+    return pos.x + pos.y * _GridSize + pos.z * _GridSize * _GridSize;
+}
+
+uint3 to3D(uint idx) {
+    uint3 voxelRes = _GridSize;
+    uint x = idx % (voxelRes.x);
+    uint y = (idx / voxelRes.x) % voxelRes.y;
+    uint z = idx / (voxelRes.x * voxelRes.y);
+
+    return uint3(x, y, z);
+}
+
+[numthreads(64, 1, 1)] 
+void ClearVoxelBuffer(uint3 id : SV_DispatchThreadID) {
+    _VoxelGrid[id.x] = 0;
+}
+
+[numthreads(64, 1, 1)] 
+void VoxelizePositions(uint3 id : SV_DispatchThreadID) {
+    float3 pos = ReadVertex(id.x);
+
+    pos = pos % (_GridBounds / 2.0f);
+    pos += (_GridBounds / 2.0f);
+    pos /= _GridBounds;
+    pos *= _GridSize;
+
+    _VoxelGrid[to1D(pos)] = 1;
 }
