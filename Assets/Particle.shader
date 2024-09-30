@@ -25,13 +25,33 @@ Shader "Custom/Particle" {
 
 			struct v2f {
 				float4 pos : SV_POSITION;
+				float occlusion : TEXCOORD0;
+				float3 worldPos : TEXCOORD1;
 			};
+
+			
+			StructuredBuffer<float> _OcclusionGrid;
+			int _GridSize, _GridBounds;
+
+			uint to1D(uint3 pos) {
+				return pos.x + pos.y * _GridSize + pos.z * _GridSize * _GridSize;
+			}
 
 
 			v2f vp(VertexData v) {
 				v2f i;
 
+				// float3 pos = v.vertex.xyz;
+				// pos += (_GridBounds / 2.0f);
+				// pos /= _GridBounds;
+				// pos *= _GridSize;
+
+				// if (any(uint3(pos) > _GridSize) || any(pos < 0)) return;
+
 				i.pos = UnityObjectToClipPos(v.vertex);
+				// i.occlusion = _OcclusionGrid[to1D(pos)];
+				i.occlusion = 0;
+				i.worldPos = v.vertex.xyz;
 				return i;
 			}
 
@@ -44,16 +64,14 @@ Shader "Custom/Particle" {
 
 			float4 fp(v2f i) : SV_TARGET {
 				float3 col = 1;
+				
+				float3 pos = i.worldPos;
+				pos += (_GridBounds / 2.0f);
+				pos /= _GridBounds;
+				pos *= _GridSize;
+				float occlusion = _OcclusionGrid[to1D(pos)];
 
-				// col *= float3(hash(_BatchIndex * 2), hash(_BatchIndex * 4), hash(_BatchIndex * 3));
-				// col = 1;
-
-				// col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
-
-				// col = pow(saturate(length(i.worldPos * 0.25f)), 0.75f) + 0.01f;
-				// col += hash(length(i.worldPos.xyz) * 10000) * 0.05f;
-				// col = 1;
-				return float4(col, 1);
+				return float4(col * occlusion, 1);
 			}
 
 			ENDCG

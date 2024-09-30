@@ -30,9 +30,11 @@ Shader "Custom/Voxel" {
 				float4 pos : SV_POSITION;
 				float3 normal : TEXCOORD0;
                 int voxel : TEXCOORD1;
+				float occlusion : TEXCOORD2;
 			};
 
 			StructuredBuffer<int> _VoxelGrid;
+			StructuredBuffer<float> _OcclusionGrid;
             int _GridSize, _GridBounds;
             float _VoxelSize;
 
@@ -62,9 +64,12 @@ Shader "Custom/Voxel" {
 				float4 pos = v.vertex;
                 pos.xyz = (v.vertex.xyz + voxelPos) * _VoxelSize + (_VoxelSize * 0.5f) - _GridBounds * 0.5f;
 
+				float occlusion = _OcclusionGrid[instanceID];
+
 				i.pos = UnityObjectToClipPos(pos) * voxel;
 				i.normal = UnityObjectToWorldNormal(v.normal);
                 i.voxel = voxel;
+				i.occlusion = occlusion;
 
 				return i;
 			}
@@ -78,6 +83,7 @@ Shader "Custom/Voxel" {
                 
 				col *= saturate(DotClamped(_WorldSpaceLightPos0.xyz, i.normal) + 0.15f);
 
+				col *= i.occlusion;
 				return float4(saturate(col), 1);
 			}
 

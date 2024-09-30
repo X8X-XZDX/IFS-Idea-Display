@@ -4,6 +4,8 @@
 #pragma kernel AffineTransformIterated
 #pragma kernel ClearVoxelBuffer
 #pragma kernel VoxelizePositions
+#pragma kernel ClearOcclusion
+#pragma kernel CalculateOcclusion
 
 #define SIZEOF_UINT 4
 #define SIZEOF_FLOAT3 12
@@ -69,6 +71,10 @@ void ApplyDebugTransform(uint3 id : SV_DispatchThreadID) {
     // _PositionBuffer[id.x] = float4(newPosition.xyz, 1);
 }
 
+uint _GridSize, _GridBounds;
+
+float4x4 _FinalTransform;
+
 [numthreads(64, 1, 1)] 
 void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
     float3 currentPos = ReadVertex(id.x);
@@ -84,7 +90,7 @@ void AffineTransformChaos(uint3 id : SV_DispatchThreadID) {
 
     newPosition = mul(attractor, newPosition);
 
-    if (dot(newPosition, newPosition) > 100) newPosition = 0; // If particle shot off to infinity for some stupid reason then reset it to the origin
+    if (dot(newPosition.xyz, newPosition.xyz) > 10) newPosition = 0; // If particle shot off to infinity for some stupid reason then reset it to the origin
 
     WriteVertex(id.x, newPosition.xyz);
 }
@@ -106,7 +112,6 @@ void AffineTransformIterated(uint3 id : SV_DispatchThreadID) {
 }
 
 RWStructuredBuffer<int> _VoxelGrid;
-uint _GridSize, _GridBounds;
 
 uint to1D(uint3 pos) {
     return pos.x + pos.y * _GridSize + pos.z * _GridSize * _GridSize;
@@ -128,12 +133,45 @@ void ClearVoxelBuffer(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(64, 1, 1)] 
 void VoxelizePositions(uint3 id : SV_DispatchThreadID) {
-    float3 pos = ReadVertex(id.x);
+    float3 pos = mul(_FinalTransform, float4(ReadVertex(id.x), 1.0f)).xyz;
 
-    pos = pos % (_GridBounds / 2.0f);
+    // pos = pos % (_GridBounds / 2.0f);
     pos += (_GridBounds / 2.0f);
     pos /= _GridBounds;
     pos *= _GridSize;
 
+    if (any(uint3(pos) > _GridSize) || any(pos < 0)) return;
+
     _VoxelGrid[to1D(pos)] = 1;
+}
+
+RWStructuredBuffer<float> _OcclusionGrid;
+
+[numthreads(64, 1, 1)] 
+void ClearOcclusion(uint3 id : SV_DispatchThreadID) {
+    _OcclusionGrid[id.x] = 0;
+}
+
+[numthreads(64, 1, 1)] 
+void CalculateOcclusion(uint3 id : SV_DispatchThreadID) {
+
+    int3 pos = to3D(id.x);
+
+    int neighborCount = 0;
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            for (int z = -1; z <= 1; ++z) {
+                if (x == 0 && y == 0 && z == 0) continue;
+                uint addr = to1D(pos - int3(x, y, z));
+                neighborCount += _VoxelGrid[addr];
+            }
+        }
+    }
+
+    float occlusion = neighborCount / 27.0f;
+
+    // occlusion = 1;
+    // if (neighborCount == 10) occlusion = 0.25f;
+
+    _OcclusionGrid[id.x] = 1 - occlusion;
 }

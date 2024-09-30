@@ -28,7 +28,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
     void InitializeRenderParams() {
         pointRenderParams = new RenderParams(pointMaterial);
         pointRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
-        // pointRenderParams.matProps = new MaterialPropertyBlock();
+        pointRenderParams.matProps = new MaterialPropertyBlock();
     }
 
     void InitializeMeshes() {
@@ -62,7 +62,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     public Shader voxelShader;
     public Mesh voxelMesh;
-    GraphicsBuffer voxelGrid, commandBuffer;
+    GraphicsBuffer voxelGrid, occlusionGrid, commandBuffer;
     GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
     public int voxelBounds;
     public float voxelSize;
@@ -81,16 +81,25 @@ public class IteratedFunctionSystem : MonoBehaviour {
         Debug.Log("Voxel Count: " + voxelCount.ToString());
 
         voxelGrid = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(int)));
+        occlusionGrid = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(float)));
 
         // Clear Voxel Grid
         particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
         particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+
+        // Clear Occlusion Grid
+        particleUpdater.SetBuffer(6, "_OcclusionGrid", occlusionGrid);
+        particleUpdater.Dispatch(6, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
 
         renderParams = new RenderParams(voxelMaterial);
         renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
         renderParams.matProps = new MaterialPropertyBlock();
 
         renderParams.matProps.SetBuffer("_VoxelGrid", voxelGrid);
+        renderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
+        pointRenderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
+        pointRenderParams.matProps.SetInt("_GridSize", voxelDimension);
+        pointRenderParams.matProps.SetInt("_GridBounds", voxelBounds);
         renderParams.matProps.SetFloat("_VoxelSize", voxelSize);
         renderParams.matProps.SetInt("_GridSize", voxelDimension);
         renderParams.matProps.SetInt("_GridBounds", voxelBounds);
@@ -107,7 +116,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
     void OnEnable() {
         // Debug.Log(SystemInfo.graphicsDeviceName);
 
-        // UnsafeUtility.SetLeakDetectionMode(Unity.Collections.NativeLeakDetectionMode.Enabled);
+        UnsafeUtility.SetLeakDetectionMode(Unity.Collections.NativeLeakDetectionMode.Enabled);
         pointMaterial = new Material(pointShader);
 
         InitializeMeshes();
@@ -162,11 +171,23 @@ public class IteratedFunctionSystem : MonoBehaviour {
         particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
         particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
 
+        // Clear Occlusion
+        particleUpdater.SetBuffer(6, "_OcclusionGrid", occlusionGrid);
+        particleUpdater.Dispatch(6, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+
+        // Particles To Voxel (Brute Force)
         particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
         particleUpdater.SetInt("_GridBounds", voxelBounds);
+        particleUpdater.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
         particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
         particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
         particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+
+        // Approximate Occlusion
+        particleUpdater.SetBuffer(7, "_VoxelGrid", voxelGrid);
+        particleUpdater.SetBuffer(7, "_OcclusionGrid", occlusionGrid);
+        particleUpdater.Dispatch(7, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+
     }
 
     void DrawParticles() {
@@ -178,9 +199,10 @@ public class IteratedFunctionSystem : MonoBehaviour {
     void Update() {
         if (uncapped || Input.GetKeyDown("space")) {
             IterateSystem();
-            Voxelize();
+            // Voxelize();
         }
 
+            Voxelize();
         DrawParticles();
 
         if (renderVoxels) {
@@ -200,6 +222,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
         commandBuffer.Release();
         voxelGrid.Release();
+        occlusionGrid.Release();
     }
 
     void OnDrawGizmos() {

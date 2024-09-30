@@ -259,9 +259,14 @@ MonoBehaviour:
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 1048576
-  batchCount: 20
+  batchCount: 10
   uncapped: 1
   pointCloudMeshes: []
+  voxelShader: {fileID: 4800000, guid: 0d552777edf877b469ce5b6e1ac22326, type: 3}
+  voxelMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  voxelBounds: 3
+  voxelSize: 0.02
+  renderVoxels: 0
 --- !u!4 &930339297
 Transform:
   m_ObjectHideFlags: 0
@@ -420,7 +425,7 @@ MonoBehaviour:
   animate: 1
   speed: 1
   finalTransform:
-    scale: {x: 4, y: 4, z: 4}
+    scale: {x: 1, y: 1, z: 1}
     shearX: {x: 0, y: 0, z: 0}
     shearY: {x: 0, y: 0, z: 0}
     shearZ: {x: 0, y: 0, z: 0}
@@ -440,16 +445,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scaleMin: {x: 0.4, y: 0.4, z: 0.4}
   scaleMax: {x: 0.8, y: 0.6, z: 0.8}
-  shearXMin: {x: 0, y: -0.3, z: -0.3}
-  shearXMax: {x: 0, y: 0.3, z: 0.3}
-  shearYMin: {x: -0.3, y: -0.3, z: -0.3}
-  shearYMax: {x: 0.3, y: 0.3, z: 0.3}
-  shearZMin: {x: -0.3, y: -0.3, z: 0}
-  shearZMax: {x: 0.3, y: 0.3, z: 0}
+  shearXMin: {x: 0, y: -0.1, z: -0.1}
+  shearXMax: {x: 0, y: 0.1, z: 0.1}
+  shearYMin: {x: -0.1, y: 0, z: -0.1}
+  shearYMax: {x: 0.1, y: 0, z: 0.1}
+  shearZMin: {x: -0.1, y: -0.1, z: 0}
+  shearZMax: {x: 0.1, y: 0.1, z: 0}
   rotateMin: {x: -20.82, y: -30.1, z: -56}
   rotateMax: {x: 25.44, y: 38, z: 30.8}
-  translateMin: {x: -0.66, y: -0.33, z: -0.66}
-  translateMax: {x: 0.66, y: 0.33, z: 0.66}
+  translateMin: {x: 0, y: 0, z: 0}
+  translateMax: {x: 0, y: 0, z: 0}
   translationTemplate: 0
 --- !u!114 &930339307
 MonoBehaviour:
@@ -463,13 +468,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4d32cc418c7c2c47adcb5f016300918, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  affineTransformations: {fileID: 0}
+  affineTransformations: {fileID: 930339299}
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
-  particlesPerBatch: 200000
+  particlesPerBatch: 1048576
   batchCount: 1
-  uncapped: 1
+  uncapped: 0
   pointCloudMeshes: []
+  voxelShader: {fileID: 0}
+  voxelMesh: {fileID: 0}
+  voxelBounds: 0
+  voxelSize: 0
+  renderVoxels: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
