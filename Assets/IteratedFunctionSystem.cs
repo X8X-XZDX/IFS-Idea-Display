@@ -66,10 +66,15 @@ public class IteratedFunctionSystem : MonoBehaviour {
     GraphicsBuffer.IndirectDrawIndexedArgs[] commandIndexedData;
     public int voxelBounds;
     public float voxelSize;
+    
+    [Range(1, 32)]
+    public int meshesToVoxelize = 1;
+
     public bool renderVoxels = false;
     private int voxelDimension, voxelCount;
     private Material voxelMaterial;
     private RenderParams renderParams;
+
 
     void InitializeVoxelGrid() {
         voxelMaterial = new Material(voxelShader);
@@ -179,10 +184,13 @@ public class IteratedFunctionSystem : MonoBehaviour {
         particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
         particleUpdater.SetInt("_GridBounds", voxelBounds);
         particleUpdater.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
-        particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[0].GetVertexBuffer(0));
-        particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
-        particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
-
+        
+        for (int i = 0; i < Mathf.Min(meshesToVoxelize, batchCount); ++i) {
+            particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
+            particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
+            particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
+        }
+        
         // Approximate Occlusion
         particleUpdater.SetBuffer(7, "_VoxelGrid", voxelGrid);
         particleUpdater.SetBuffer(7, "_OcclusionGrid", occlusionGrid);
