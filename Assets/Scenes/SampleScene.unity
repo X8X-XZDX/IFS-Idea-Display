@@ -265,7 +265,7 @@ MonoBehaviour:
   voxelShader: {fileID: 4800000, guid: 0d552777edf877b469ce5b6e1ac22326, type: 3}
   voxelMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   voxelBounds: 3
-  voxelSize: 0.02
+  voxelSize: 0.025
   renderVoxels: 0
 --- !u!4 &930339297
 Transform:

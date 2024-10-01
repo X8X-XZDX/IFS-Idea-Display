@@ -191,8 +191,9 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void DrawParticles() {
+        pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
         for (int i = 0; i < batchCount; ++i) {
-            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, affineTransformations.GetFinalTransform());
+            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.identity);
         }
     }
 
@@ -202,11 +203,12 @@ public class IteratedFunctionSystem : MonoBehaviour {
             // Voxelize();
         }
 
-            Voxelize();
-        DrawParticles();
+        Voxelize();
 
         if (renderVoxels) {
             Graphics.RenderMeshIndirect(renderParams, voxelMesh, commandBuffer, 1);
+        } else {
+            DrawParticles();
         }
     }
 
