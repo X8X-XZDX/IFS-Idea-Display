@@ -217,7 +217,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void Update() {
-        if (Input.GetKeyDown("space")) uncapped = !uncapped;
+        if (Input.GetKeyDown("r")) uncapped = !uncapped;
 
         if (uncapped) {
             IterateSystem();

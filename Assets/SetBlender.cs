@@ -20,6 +20,7 @@ public class SetBlender : MonoBehaviour {
     private List<TransformInstructions> blendedSet = new List<TransformInstructions>();
 
     private float bounce = 1;
+    private bool swap = false;
 
     public List<TransformInstructions> GetBlendedSet() {
         return blendedSet;
@@ -77,36 +78,81 @@ public class SetBlender : MonoBehaviour {
 
         // Blend instruction sets and create list of affine transformations
         for (int i = 0; i < instructionSet1.Count; ++i) {
-            blendedSet.Add(InterpolateInstructions(instructionSet1[i], instructionSet2[i], t));
+            float blendFactor = t; // TO DO: Easing Functions
+
+            if (swap)
+                blendedSet.Add(InterpolateInstructions(instructionSet2[i], instructionSet1[i], blendFactor));
+            else
+                blendedSet.Add(InterpolateInstructions(instructionSet1[i], instructionSet2[i], blendFactor));
+        }
+    }
+
+    private List<TransformInstructions> moveTowardSet = new List<TransformInstructions>();
+
+    Vector3 ExpDecay(Vector3 a, Vector3 b, float decay) {
+        Vector3 v = new Vector3(0, 0, 0);
+        v.x = b.x + (a.x - b.x) * Mathf.Exp(-decay * Time.deltaTime);
+        v.y = b.y + (a.y - b.y) * Mathf.Exp(-decay * Time.deltaTime);
+        v.z = b.z + (a.z - b.z) * Mathf.Exp(-decay * Time.deltaTime);
+
+        return v;
+    }
+
+    TransformInstructions MoveTowardInstructions(TransformInstructions t1, TransformInstructions t2, float decay) {
+        TransformInstructions i = new TransformInstructions();
+
+        i.scale = ExpDecay(t1.scale, t2.scale, decay);
+        i.shearX = ExpDecay(t1.shearX, t2.shearX, decay);
+        i.shearY = ExpDecay(t1.shearY, t2.shearY, decay);
+        i.shearZ = ExpDecay(t1.shearZ, t2.shearZ, decay);
+        i.translate = ExpDecay(t1.translate, t2.translate, decay);
+
+        Quaternion r1 = Quaternion.Euler(t1.rotate);
+        Quaternion r2 = Quaternion.Euler(t2.rotate);
+        Quaternion r3 = Quaternion.Slerp(r1, r2, Mathf.Min(decay * Time.deltaTime, 1.0f));
+
+        i.rotate = r3.eulerAngles;
+
+        return i;
+    }
+
+    private void MoveTowardSet() {
+        blendedSet.Clear();
+
+        for (int i = 0; i < moveTowardSet.Count; ++i) {
+            moveTowardSet[i] = MoveTowardInstructions(moveTowardSet[i], set2.transformSet[i], speed);
+            blendedSet.Add(moveTowardSet[i]);
         }
     }
 
     private void OnEnable() {
         t = 0;
-        BlendSets();
+
+        moveTowardSet = new List<TransformInstructions>(set1.transformSet);
+        MoveTowardSet();
+        // BlendSets();
     }
 
     private bool paused = false;
     private void Update() {
 
-        if (Input.GetKeyDown("space")) paused = !paused;
+        // if (Input.GetKeyDown("space")) paused = !paused;
+        if (Input.GetKeyDown("space")) set2.ApplyPreset();
 
         if (animate && !paused) {
-            if (t > 1) {
-                t = Mathf.Clamp(t, 0.0f, 1.0f);
-                bounce *= -1;
-
-                set1.ApplyPreset();
-            } else if (t < 0) {
-                t = Mathf.Clamp(t, 0.0f, 1.0f);
-                bounce *= -1;
-
-                set2.ApplyPreset();
-            }
-
             t += Time.deltaTime * bounce * speed;
+
+            t = Mathf.Clamp(t, 0.0f, 1.0f);
+            if (t >= 1) {
+                swap = !swap;
+                t = 0;
+
+                if (swap) set1.ApplyPreset();
+                else set2.ApplyPreset();
+            }
         }
 
-        BlendSets();
+        // BlendSets();
+        MoveTowardSet();
     }
 }
