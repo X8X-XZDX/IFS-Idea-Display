@@ -78,6 +78,8 @@ Shader "Custom/Particle" {
 			}
 
 			float4x4 _FinalTransform;
+			float _OcclusionMultiplier, _OcclusionAttenuation;
+			float3 _ParticleColor, _OcclusionColor;
 
 			v2f vp(VertexData v) {
 				v2f i;
@@ -111,17 +113,15 @@ Shader "Custom/Particle" {
 			}
 
 			float4 fp(v2f i) : SV_TARGET {
-				float3 col = 1;
+				float3 col = _ParticleColor;
 
 				clip(-i.outOfBounds);
 				
 				float occlusion = getTrilinearVoxel(i.worldPos);
 
-				occlusion = pow(saturate(occlusion * 1.15f), 0.75f);
+				occlusion = pow(saturate(occlusion * _OcclusionMultiplier), _OcclusionAttenuation);
 
-				col = float3(0.92f, 0.97f, 0.9f);
-
-				return float4(col * occlusion, 1);
+				return float4(lerp(_OcclusionColor, col, occlusion), 1);
 			}
 
 			ENDCG

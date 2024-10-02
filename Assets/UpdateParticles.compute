@@ -174,5 +174,5 @@ void CalculateOcclusion(uint3 id : SV_DispatchThreadID) {
     // occlusion = 1;
     // if (neighborCount == 10) occlusion = 0.25f;
 
-    _OcclusionGrid[id.x + _MemoryOffset] = pow(saturate((1 - occlusion) * 1.35f), 4.0f);
+    _OcclusionGrid[id.x + _MemoryOffset] = (1 - occlusion);
 }

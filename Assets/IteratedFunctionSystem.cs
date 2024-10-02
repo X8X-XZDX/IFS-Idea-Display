@@ -209,7 +209,19 @@ public class IteratedFunctionSystem : MonoBehaviour {
         }
     }
 
+    [Range(0.0f, 3.0f)]
+    public float occlusionMultiplier = 1.0f;
+
+    [Range(0.0f, 5.0f)]
+    public float occlusionAttenuation = 1.0f;
+
+    public Color particleColor, occlusionColor;
+
     void DrawParticles() {
+        pointRenderParams.matProps.SetFloat("_OcclusionMultiplier", occlusionMultiplier);
+        pointRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
+        pointRenderParams.matProps.SetVector("_ParticleColor", particleColor);
+        pointRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
         pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
         for (int i = 0; i < batchCount; ++i) {
             Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.identity);
