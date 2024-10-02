@@ -51,7 +51,7 @@ Shader "Custom/Particle" {
 					seedPos += (_GridBounds / 2.0f);
 					seedPos /= _GridBounds;
 					seedPos *= _GridSize;
-					seedPos -= 0.5f;
+					// seedPos -= 0.5f;
 
 					uint3 vi = floor(seedPos);
 
@@ -116,6 +116,10 @@ Shader "Custom/Particle" {
 				clip(-i.outOfBounds);
 				
 				float occlusion = getTrilinearVoxel(i.worldPos);
+
+				occlusion = pow(saturate(occlusion * 1.15f), 0.75f);
+
+				col = float3(0.92f, 0.97f, 0.9f);
 
 				return float4(col * occlusion, 1);
 			}

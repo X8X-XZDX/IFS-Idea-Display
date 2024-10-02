@@ -88,14 +88,6 @@ public class IteratedFunctionSystem : MonoBehaviour {
         voxelGrid = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(int)));
         occlusionGrid = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(float)));
 
-        // Clear Voxel Grid
-        particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
-        particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
-
-        // Clear Occlusion Grid
-        particleUpdater.SetBuffer(6, "_OcclusionGrid", occlusionGrid);
-        particleUpdater.Dispatch(6, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
-
         renderParams = new RenderParams(voxelMaterial);
         renderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
         renderParams.matProps = new MaterialPropertyBlock();
@@ -172,13 +164,26 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void Voxelize() {
-        // Clear Voxel Grid
-        particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
-        particleUpdater.Dispatch(4, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+        int maxGroups = 65535;
+        int maxThreadsPerGroup = threadsPerGroup * 65535;
+        int groupCount = Mathf.CeilToInt(voxelCount / threadsPerGroup);
 
-        // Clear Occlusion
-        particleUpdater.SetBuffer(6, "_OcclusionGrid", occlusionGrid);
-        particleUpdater.Dispatch(6, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+        int clearedMemoryOffset = 0;
+        int clearedGroupCount = groupCount;
+        while (clearedMemoryOffset < voxelCount) {
+            particleUpdater.SetInt("_MemoryOffset", clearedMemoryOffset);
+
+            // Clear Voxel Grid
+            particleUpdater.SetBuffer(4, "_VoxelGrid", voxelGrid);
+            particleUpdater.Dispatch(4, Mathf.Min(clearedGroupCount, maxGroups), 1, 1);
+
+            // Clear Occlusion
+            particleUpdater.SetBuffer(6, "_OcclusionGrid", occlusionGrid);
+            particleUpdater.Dispatch(6, Mathf.Min(clearedGroupCount, maxGroups), 1, 1);
+
+            clearedGroupCount -= maxGroups;
+            clearedMemoryOffset += maxThreadsPerGroup;
+        }
 
         // Particles To Voxel (Brute Force)
         particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
@@ -190,12 +195,18 @@ public class IteratedFunctionSystem : MonoBehaviour {
             particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
             particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
         }
-        
-        // Approximate Occlusion
+
+        int occlusionMemoryOffset = 0;
+        int occlusionGroupCount = groupCount;
         particleUpdater.SetBuffer(7, "_VoxelGrid", voxelGrid);
         particleUpdater.SetBuffer(7, "_OcclusionGrid", occlusionGrid);
-        particleUpdater.Dispatch(7, Mathf.CeilToInt(voxelCount / threadsPerGroup), 1, 1);
+        while (occlusionMemoryOffset < voxelCount) {
+            particleUpdater.SetInt("_MemoryOffset", occlusionMemoryOffset);
+            particleUpdater.Dispatch(7, Mathf.Min(occlusionGroupCount, maxGroups), 1, 1);
 
+            occlusionGroupCount -= maxGroups;
+            occlusionMemoryOffset += maxThreadsPerGroup;
+        }
     }
 
     void DrawParticles() {
@@ -206,9 +217,10 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void Update() {
-        if (uncapped || Input.GetKeyDown("space")) {
+        if (Input.GetKeyDown("space")) uncapped = !uncapped;
+
+        if (uncapped) {
             IterateSystem();
-            // Voxelize();
         }
 
         Voxelize();
@@ -222,14 +234,13 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
     void OnDisable() {
         for (int i = 0; i < batchCount; ++i) {
-            var vertBuffer = pointCloudMeshes[i].GetVertexBuffer(0);
-            var indexBuffer = pointCloudMeshes[i].GetIndexBuffer();
+            pointCloudMeshes[i].GetVertexBuffer(0).Release();
+            pointCloudMeshes[i].GetIndexBuffer().Release();
 
-            vertBuffer.Release();
-            indexBuffer.Release();
             UnityEngine.Object.Destroy(pointCloudMeshes[i]);
         }
-
+        
+        pointCloudMeshes = null;
         commandBuffer.Release();
         voxelGrid.Release();
         occlusionGrid.Release();

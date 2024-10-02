@@ -86,9 +86,12 @@ public class SetBlender : MonoBehaviour {
         BlendSets();
     }
 
+    private bool paused = false;
     private void Update() {
 
-        if (animate) {
+        if (Input.GetKeyDown("space")) paused = !paused;
+
+        if (animate && !paused) {
             if (t > 1) {
                 t = Mathf.Clamp(t, 0.0f, 1.0f);
                 bounce *= -1;

@@ -112,6 +112,7 @@ void AffineTransformIterated(uint3 id : SV_DispatchThreadID) {
 }
 
 RWStructuredBuffer<int> _VoxelGrid;
+uint _MemoryOffset;
 
 uint to1D(uint3 pos) {
     return pos.x + pos.y * _GridSize + pos.z * _GridSize * _GridSize;
@@ -128,7 +129,7 @@ uint3 to3D(uint idx) {
 
 [numthreads(64, 1, 1)] 
 void ClearVoxelBuffer(uint3 id : SV_DispatchThreadID) {
-    _VoxelGrid[id.x] = 0;
+    _VoxelGrid[id.x + _MemoryOffset] = 0;
 }
 
 [numthreads(64, 1, 1)] 
@@ -149,13 +150,13 @@ RWStructuredBuffer<float> _OcclusionGrid;
 
 [numthreads(64, 1, 1)] 
 void ClearOcclusion(uint3 id : SV_DispatchThreadID) {
-    _OcclusionGrid[id.x] = 0;
+    _OcclusionGrid[id.x + _MemoryOffset] = 0;
 }
 
 [numthreads(64, 1, 1)] 
 void CalculateOcclusion(uint3 id : SV_DispatchThreadID) {
 
-    int3 pos = to3D(id.x);
+    int3 pos = to3D(id.x + _MemoryOffset);
 
     int neighborCount = 0;
     for (int x = -1; x <= 1; ++x) {
@@ -173,5 +174,5 @@ void CalculateOcclusion(uint3 id : SV_DispatchThreadID) {
     // occlusion = 1;
     // if (neighborCount == 10) occlusion = 0.25f;
 
-    _OcclusionGrid[id.x] = 1 - occlusion;
+    _OcclusionGrid[id.x + _MemoryOffset] = pow(saturate((1 - occlusion) * 1.35f), 4.0f);
 }
