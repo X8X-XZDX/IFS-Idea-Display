@@ -7,13 +7,20 @@ public class SetBlender : MonoBehaviour {
 
     public TransformSet set1, set2;
 
+    public AnimationCurve animationCurve;
+
+    public bool useAnimationCurve = false;
+
     [Range(0.0f, 1.0f)]
     public float t = 0.0f;
 
     public bool animate = false;
 
-    [Range(0.01f, 2.0f)]
+    [Range(0.01f, 5.0f)]
     public float speed = 1.0f;
+
+    [Range(0.001f, 1.0f)]
+    public float epsilon = 0.01f;
     
     public TransformInstructions finalTransform = new TransformInstructions();
 
@@ -33,20 +40,21 @@ public class SetBlender : MonoBehaviour {
     TransformInstructions InterpolateInstructions(TransformInstructions t1, TransformInstructions t2, float t) {
         TransformInstructions interpolatedInstructions = new TransformInstructions();
 
-        interpolatedInstructions.scale = Vector3.Lerp(t1.scale, t2.scale, t);
-        interpolatedInstructions.shearX = Vector3.Lerp(t1.shearX, t2.shearX, t);
-        interpolatedInstructions.shearY = Vector3.Lerp(t1.shearY, t2.shearY, t);
-        interpolatedInstructions.shearZ = Vector3.Lerp(t1.shearZ, t2.shearZ, t);
-        interpolatedInstructions.translate = Vector3.Lerp(t1.translate, t2.translate, t);
+        interpolatedInstructions.scale = Vector3.LerpUnclamped(t1.scale, t2.scale, t);
+        interpolatedInstructions.shearX = Vector3.LerpUnclamped(t1.shearX, t2.shearX, t);
+        interpolatedInstructions.shearY = Vector3.LerpUnclamped(t1.shearY, t2.shearY, t);
+        interpolatedInstructions.shearZ = Vector3.LerpUnclamped(t1.shearZ, t2.shearZ, t);
+        interpolatedInstructions.translate = Vector3.LerpUnclamped(t1.translate, t2.translate, t);
 
         Quaternion r1 = Quaternion.Euler(t1.rotate);
         Quaternion r2 = Quaternion.Euler(t2.rotate);
-        Quaternion r3 = Quaternion.Slerp(r1, r2, t);
+        Quaternion r3 = Quaternion.SlerpUnclamped(r1, r2, t);
 
         interpolatedInstructions.rotate = r3.eulerAngles;
 
         return interpolatedInstructions;
     }
+
 
     private void BlendSets() {
         blendedSet.Clear();
@@ -78,7 +86,7 @@ public class SetBlender : MonoBehaviour {
 
         // Blend instruction sets and create list of affine transformations
         for (int i = 0; i < instructionSet1.Count; ++i) {
-            float blendFactor = t; // TO DO: Easing Functions
+            float blendFactor = animationCurve.Evaluate(t); // TO DO: Easing Functions
 
             if (swap)
                 blendedSet.Add(InterpolateInstructions(instructionSet2[i], instructionSet1[i], blendFactor));
@@ -136,23 +144,25 @@ public class SetBlender : MonoBehaviour {
     private bool paused = false;
     private void Update() {
 
-        // if (Input.GetKeyDown("space")) paused = !paused;
-        if (Input.GetKeyDown("space")) set2.ApplyPreset();
+        if (useAnimationCurve) {
+            if (Input.GetKeyDown("space")) paused = !paused;
+            if (animate && !paused) {
+                t += Time.deltaTime * bounce * speed;
 
-        if (animate && !paused) {
-            t += Time.deltaTime * bounce * speed;
+                t = Mathf.Clamp(t, 0.0f, 1.0f);
+                if (t >= 1) {
+                    swap = !swap;
+                    t = 0;
 
-            t = Mathf.Clamp(t, 0.0f, 1.0f);
-            if (t >= 1) {
-                swap = !swap;
-                t = 0;
-
-                if (swap) set1.ApplyPreset();
-                else set2.ApplyPreset();
+                    if (swap) set1.ApplyPreset();
+                    else set2.ApplyPreset();
+                }
             }
-        }
 
-        // BlendSets();
-        MoveTowardSet();
+            BlendSets();
+        } else {
+            if (Input.GetKeyDown("space")) set2.ApplyPreset();
+            MoveTowardSet();
+        }
     }
 }
