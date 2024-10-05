@@ -134,16 +134,24 @@ void ClearVoxelBuffer(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(64, 1, 1)] 
 void VoxelizePositions(uint3 id : SV_DispatchThreadID) {
-    float3 pos = mul(_FinalTransform, float4(ReadVertex(id.x), 1.0f)).xyz;
+    float3 pos = ReadVertex(id.x);
 
-    // pos = pos % (_GridBounds / 2.0f);
-    pos += (_GridBounds / 2.0f);
-    pos /= _GridBounds;
-    pos *= _GridSize;
+    float3 centralPos = mul(_FinalTransform, float4(pos, 1.0f)).xyz;
+    centralPos += (_GridBounds / 2.0f);
+    centralPos /= _GridBounds;
+    centralPos *= _GridSize;
 
-    if (any(uint3(pos) > _GridSize) || any(pos < 0)) return;
+    _VoxelGrid[to1D(centralPos)] = 1;
 
-    _VoxelGrid[to1D(pos)] = 1;
+    for (uint i = 0; i < _TransformationCount; ++i) {
+        float3 nextPos = mul(_FinalTransform, mul(_Transformations[i], float4(pos, 1.0f))).xyz;
+
+        nextPos += (_GridBounds / 2.0f);
+        nextPos /= _GridBounds;
+        nextPos *= _GridSize;
+
+        _VoxelGrid[to1D(nextPos)] = 1;
+    }
 }
 
 RWStructuredBuffer<float> _OcclusionGrid;

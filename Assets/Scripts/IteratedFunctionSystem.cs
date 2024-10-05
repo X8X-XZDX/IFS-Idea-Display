@@ -8,27 +8,44 @@ using Unity.Collections.LowLevel.Unsafe;
 public class IteratedFunctionSystem : MonoBehaviour {
     public AffineTransformations affineTransformations;
 
-    public Shader pointShader;
+    public Shader pointShader, instancedPointShader;
 
     public ComputeShader particleUpdater;
 
     public uint particlesPerBatch = 200000;
     public uint batchCount = 1;
+    public bool instanceNextGeneration = true;
+    public bool updateInstanceCount = true;
 
     public bool uncapped = false;
 
     public Mesh[] pointCloudMeshes;
-    private Material pointMaterial;
+    private Material pointMaterial, instancedPointMaterial;
 
-    private RenderParams pointRenderParams;
+    private RenderParams pointRenderParams, instancedRenderParams;
 
     [NonSerialized]
     public int threadsPerGroup = 64;
+
+    
+    GraphicsBuffer instancedCommandBuffer;
+    GraphicsBuffer.IndirectDrawIndexedArgs[] instancedCommandIndexedData;
 
     void InitializeRenderParams() {
         pointRenderParams = new RenderParams(pointMaterial);
         pointRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
         pointRenderParams.matProps = new MaterialPropertyBlock();
+
+        instancedRenderParams = new RenderParams(instancedPointMaterial);
+        instancedRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
+        instancedRenderParams.matProps = new MaterialPropertyBlock();
+
+        instancedCommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        instancedCommandIndexedData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
+        instancedCommandIndexedData[0].instanceCount = System.Convert.ToUInt32(affineTransformations.GetTransformCount());
+        instancedCommandIndexedData[0].indexCountPerInstance = particlesPerBatch;
+
+        instancedCommandBuffer.SetData(instancedCommandIndexedData);
     }
 
     void InitializeMeshes() {
@@ -94,12 +111,16 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
         renderParams.matProps.SetBuffer("_VoxelGrid", voxelGrid);
         renderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
-        pointRenderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
-        pointRenderParams.matProps.SetInt("_GridSize", voxelDimension);
-        pointRenderParams.matProps.SetInt("_GridBounds", voxelBounds);
         renderParams.matProps.SetFloat("_VoxelSize", voxelSize);
         renderParams.matProps.SetInt("_GridSize", voxelDimension);
         renderParams.matProps.SetInt("_GridBounds", voxelBounds);
+
+        pointRenderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
+        pointRenderParams.matProps.SetInt("_GridSize", voxelDimension);
+        pointRenderParams.matProps.SetInt("_GridBounds", voxelBounds);
+        instancedRenderParams.matProps.SetBuffer("_OcclusionGrid", occlusionGrid);
+        instancedRenderParams.matProps.SetInt("_GridSize", voxelDimension);
+        instancedRenderParams.matProps.SetInt("_GridBounds", voxelBounds);
 
         commandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
         commandIndexedData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
@@ -115,6 +136,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
 
         UnsafeUtility.SetLeakDetectionMode(Unity.Collections.NativeLeakDetectionMode.Enabled);
         pointMaterial = new Material(pointShader);
+        instancedPointMaterial = new Material(instancedPointShader);
 
         InitializeMeshes();
         InitializeRenderParams();
@@ -189,10 +211,12 @@ public class IteratedFunctionSystem : MonoBehaviour {
         particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
         particleUpdater.SetInt("_GridBounds", voxelBounds);
         particleUpdater.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
         
         for (int i = 0; i < Mathf.Min(meshesToVoxelize, batchCount); ++i) {
             particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
             particleUpdater.SetBuffer(5, "_VoxelGrid", voxelGrid);
+            particleUpdater.SetBuffer(5, "_Transformations", affineTransformations.GetAffineBuffer());
             particleUpdater.Dispatch(5, Mathf.CeilToInt(particlesPerBatch / threadsPerGroup), 1, 1);
         }
 
@@ -218,17 +242,42 @@ public class IteratedFunctionSystem : MonoBehaviour {
     public Color particleColor, occlusionColor;
 
     void DrawParticles() {
-        pointRenderParams.matProps.SetFloat("_OcclusionMultiplier", occlusionMultiplier);
-        pointRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
-        pointRenderParams.matProps.SetVector("_ParticleColor", particleColor);
-        pointRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
-        pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
-        for (int i = 0; i < batchCount; ++i) {
-            Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.identity);
+        if (instanceNextGeneration) {
+            instancedRenderParams.matProps.SetFloat("_OcclusionMultiplier", occlusionMultiplier);
+            instancedRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
+            instancedRenderParams.matProps.SetVector("_ParticleColor", particleColor);
+            instancedRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
+            instancedRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            instancedRenderParams.matProps.SetBuffer("_Transformations", affineTransformations.GetAffineBuffer());
+
+            for (int i = 0; i < batchCount; ++i) {
+                Graphics.RenderMeshIndirect(instancedRenderParams, pointCloudMeshes[i], instancedCommandBuffer, 1);
+            }
+
+        } else {
+            pointRenderParams.matProps.SetFloat("_OcclusionMultiplier", occlusionMultiplier);
+            pointRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
+            pointRenderParams.matProps.SetVector("_ParticleColor", particleColor);
+            pointRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
+            pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            for (int i = 0; i < batchCount; ++i) {
+                Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.identity);
+            }
         }
     }
 
     void Update() {
+        if (updateInstanceCount) {
+            instancedCommandIndexedData[0].instanceCount = System.Convert.ToUInt32(affineTransformations.GetTransformCount());
+            instancedCommandIndexedData[0].indexCountPerInstance = particlesPerBatch;
+
+            instancedCommandBuffer.SetData(instancedCommandIndexedData);
+            updateInstanceCount = false;
+
+            Debug.Log("Particles in memory: " + (particlesPerBatch * batchCount).ToString());
+            Debug.Log("Particles drawn with instancing: " + (particlesPerBatch * batchCount * instancedCommandIndexedData[0].instanceCount).ToString());
+        }
+
         if (Input.GetKeyDown("r")) uncapped = !uncapped;
 
         if (uncapped) {
@@ -254,6 +303,7 @@ public class IteratedFunctionSystem : MonoBehaviour {
         
         pointCloudMeshes = null;
         commandBuffer.Release();
+        instancedCommandBuffer.Release();
         voxelGrid.Release();
         occlusionGrid.Release();
     }
