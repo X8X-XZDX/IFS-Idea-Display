@@ -118,7 +118,7 @@ public class AffineTransformations : MonoBehaviour {
         Matrix4x4 translate = Translate(instructions.translate);
         Matrix4x4 rotation = Rotation(instructions.rotate);
 
-        affine = translate * rotation * shear * scale;
+        affine = scale * rotation * shear * translate;
 
         return affine;
     }

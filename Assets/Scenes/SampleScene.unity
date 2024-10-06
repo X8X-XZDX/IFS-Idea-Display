@@ -257,9 +257,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   affineTransformations: {fileID: 930339299}
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  instancedPointShader: {fileID: 4800000, guid: da60c5ceac9d93949914277c9acee32e, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 1048576
-  batchCount: 20
+  batchCount: 10
+  instanceNextGeneration: 1
+  updateInstanceCount: 1
   uncapped: 1
   pointCloudMeshes: []
   voxelShader: {fileID: 4800000, guid: 0d552777edf877b469ce5b6e1ac22326, type: 3}
@@ -502,9 +505,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   affineTransformations: {fileID: 930339299}
   pointShader: {fileID: 4800000, guid: e92bc28b2a8522941af6fa66887119e9, type: 3}
+  instancedPointShader: {fileID: 0}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 1048576
   batchCount: 1
+  instanceNextGeneration: 1
+  updateInstanceCount: 1
   uncapped: 0
   pointCloudMeshes: []
   voxelShader: {fileID: 0}
