@@ -267,12 +267,12 @@ public class IteratedFunctionSystem : MonoBehaviour {
     }
 
     void Update() {
-        if (updateInstanceCount) {
+        if (Time.time < 1) {
             instancedCommandIndexedData[0].instanceCount = System.Convert.ToUInt32(affineTransformations.GetTransformCount());
             instancedCommandIndexedData[0].indexCountPerInstance = particlesPerBatch;
 
             instancedCommandBuffer.SetData(instancedCommandIndexedData);
-            updateInstanceCount = false;
+            // updateInstanceCount = false;
 
             Debug.Log("Particles in memory: " + (particlesPerBatch * batchCount).ToString());
             Debug.Log("Particles drawn with instancing: " + (particlesPerBatch * batchCount * instancedCommandIndexedData[0].instanceCount).ToString());
