@@ -16,10 +16,14 @@ public class SetBlender : MonoBehaviour {
 
     public bool animate = false;
 
-    [Range(0.01f, 5.0f)]
+    [Range(0.01f, 20.0f)]
     public float speed = 1.0f;
+    public bool frameRateIndependent = true;
 
-    [Range(0.001f, 1.0f)]
+    [Range(0.01f, 20.0f)]
+    public float rampSpeed = 1.0f;
+
+    [Range(0.001f, 30.0f)]
     public float epsilon = 0.01f;
     
     public TransformInstructions finalTransform = new TransformInstructions();
@@ -99,25 +103,32 @@ public class SetBlender : MonoBehaviour {
 
     Vector3 ExpDecay(Vector3 a, Vector3 b, float decay) {
         Vector3 v = new Vector3(0, 0, 0);
-        v.x = b.x + (a.x - b.x) * Mathf.Exp(-decay * Time.deltaTime);
-        v.y = b.y + (a.y - b.y) * Mathf.Exp(-decay * Time.deltaTime);
-        v.z = b.z + (a.z - b.z) * Mathf.Exp(-decay * Time.deltaTime);
+        float c = animationCurve.Evaluate(ramp);
+        v = Vector3.LerpUnclamped(a, b, Mathf.Min(decay * c, 1.0f));
 
         return v;
     }
 
+    float ramp = 0;
     TransformInstructions MoveTowardInstructions(TransformInstructions t1, TransformInstructions t2, float decay) {
         TransformInstructions i = new TransformInstructions();
 
-        i.scale = ExpDecay(t1.scale, t2.scale, decay);
-        i.shearX = ExpDecay(t1.shearX, t2.shearX, decay);
-        i.shearY = ExpDecay(t1.shearY, t2.shearY, decay);
-        i.shearZ = ExpDecay(t1.shearZ, t2.shearZ, decay);
-        i.translate = ExpDecay(t1.translate, t2.translate, decay);
+        float decayDeltaTime = 0.0f;
+        if (frameRateIndependent) decayDeltaTime = decay * Time.deltaTime;
+        else decayDeltaTime = decay;
+
+        // decay *= Mathf.Clamp(ramp * ramp * ramp, 0, 1);
+        // Debug.Log(Mathf.Clamp(ramp * ramp, 0, 1));
+
+        i.scale = ExpDecay(t1.scale, t2.scale, decayDeltaTime);
+        i.shearX = ExpDecay(t1.shearX, t2.shearX, decayDeltaTime);
+        i.shearY = ExpDecay(t1.shearY, t2.shearY, decayDeltaTime);
+        i.shearZ = ExpDecay(t1.shearZ, t2.shearZ, decayDeltaTime);
+        i.translate = ExpDecay(t1.translate, t2.translate, decayDeltaTime);
 
         Quaternion r1 = Quaternion.Euler(t1.rotate);
         Quaternion r2 = Quaternion.Euler(t2.rotate);
-        Quaternion r3 = Quaternion.Slerp(r1, r2, Mathf.Min(decay * Time.deltaTime, 1.0f));
+        Quaternion r3 = Quaternion.Slerp(r1, r2, Mathf.Min(decayDeltaTime * animationCurve.Evaluate(ramp), 1.0f));
 
         i.rotate = r3.eulerAngles;
 
@@ -144,12 +155,20 @@ public class SetBlender : MonoBehaviour {
     private bool paused = false;
     private void Update() {
 
-        if (useAnimationCurve) {
-            if (Input.GetKeyDown("space")) paused = !paused;
-            if (animate && !paused) {
-                t += Time.deltaTime * bounce * speed;
+        if (Input.GetKeyDown("space")) animate = !animate;
+        if (frameRateIndependent) {
+            ramp += Time.deltaTime * rampSpeed;
+            t += Time.deltaTime * speed;
+        } else {
+            ramp += rampSpeed;
+            t += speed;
+        }
 
+        if (animate) {
+
+            if (useAnimationCurve) {
                 t = Mathf.Clamp(t, 0.0f, 1.0f);
+
                 if (t >= 1) {
                     swap = !swap;
                     t = 0;
@@ -157,11 +176,22 @@ public class SetBlender : MonoBehaviour {
                     if (swap) set1.ApplyPreset();
                     else set2.ApplyPreset();
                 }
-            }
 
-            BlendSets();
-        } else {
-            if (Input.GetKeyDown("space")) set2.ApplyPreset();
+                BlendSets();
+            } else {
+                if (t >= epsilon) {
+                    t = 0;
+                    ramp = 0;
+                    set2.ApplyPreset();
+                }
+            }
+        }
+
+        if (!useAnimationCurve) {
+            if (Input.GetKeyDown("f")) {
+                ramp = 0;
+                set2.ApplyPreset();
+            }
             MoveTowardSet();
         }
     }
