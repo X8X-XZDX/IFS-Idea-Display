@@ -20,17 +20,18 @@ public class SetBlender : MonoBehaviour {
     public float speed = 1.0f;
     public bool frameRateIndependent = true;
 
+    public bool useRamp = false;
+
     [Range(0.01f, 20.0f)]
     public float rampSpeed = 1.0f;
 
     [Range(0.001f, 30.0f)]
-    public float epsilon = 0.01f;
+    public float epsilon = 1.0f;
     
     public TransformInstructions finalTransform = new TransformInstructions();
 
     private List<TransformInstructions> blendedSet = new List<TransformInstructions>();
 
-    private float bounce = 1;
     private bool swap = false;
 
     public List<TransformInstructions> GetBlendedSet() {
@@ -102,11 +103,7 @@ public class SetBlender : MonoBehaviour {
     private List<TransformInstructions> moveTowardSet = new List<TransformInstructions>();
 
     Vector3 ExpDecay(Vector3 a, Vector3 b, float decay) {
-        Vector3 v = new Vector3(0, 0, 0);
-        float c = animationCurve.Evaluate(ramp);
-        v = Vector3.LerpUnclamped(a, b, Mathf.Min(decay * c, 1.0f));
-
-        return v;
+        return Vector3.LerpUnclamped(a, b, decay);
     }
 
     float ramp = 0;
@@ -114,11 +111,13 @@ public class SetBlender : MonoBehaviour {
         TransformInstructions i = new TransformInstructions();
 
         float decayDeltaTime = 0.0f;
+
         if (frameRateIndependent) decayDeltaTime = decay * Time.deltaTime;
         else decayDeltaTime = decay;
 
-        // decay *= Mathf.Clamp(ramp * ramp * ramp, 0, 1);
-        // Debug.Log(Mathf.Clamp(ramp * ramp, 0, 1));
+        if (useRamp) decayDeltaTime *= animationCurve.Evaluate(ramp);
+
+        decayDeltaTime = Mathf.Min(decayDeltaTime, 1.0f);
 
         i.scale = ExpDecay(t1.scale, t2.scale, decayDeltaTime);
         i.shearX = ExpDecay(t1.shearX, t2.shearX, decayDeltaTime);
@@ -128,7 +127,7 @@ public class SetBlender : MonoBehaviour {
 
         Quaternion r1 = Quaternion.Euler(t1.rotate);
         Quaternion r2 = Quaternion.Euler(t2.rotate);
-        Quaternion r3 = Quaternion.Slerp(r1, r2, Mathf.Min(decayDeltaTime * animationCurve.Evaluate(ramp), 1.0f));
+        Quaternion r3 = Quaternion.Slerp(r1, r2, Mathf.Min(decayDeltaTime, 1.0f));
 
         i.rotate = r3.eulerAngles;
 
@@ -148,27 +147,35 @@ public class SetBlender : MonoBehaviour {
         t = 0;
 
         moveTowardSet = new List<TransformInstructions>(set1.transformSet);
-        MoveTowardSet();
-        // BlendSets();
+
+        if (useAnimationCurve)
+            BlendSets();
+        else
+            MoveTowardSet();
     }
 
     private bool paused = false;
     private void Update() {
 
         if (Input.GetKeyDown("space")) animate = !animate;
+
+        // Update ramp timer for lerp smoothing
         if (frameRateIndependent) {
             ramp += Time.deltaTime * rampSpeed;
-            t += Time.deltaTime * speed;
         } else {
             ramp += rampSpeed;
-            t += speed;
         }
 
+        // Automate T
         if (animate) {
+            if (frameRateIndependent) {
+                t += Time.deltaTime * speed;
+            } else {
+                t += speed;
+            }
 
             if (useAnimationCurve) {
                 t = Mathf.Clamp(t, 0.0f, 1.0f);
-
                 if (t >= 1) {
                     swap = !swap;
                     t = 0;
@@ -176,8 +183,6 @@ public class SetBlender : MonoBehaviour {
                     if (swap) set1.ApplyPreset();
                     else set2.ApplyPreset();
                 }
-
-                BlendSets();
             } else {
                 if (t >= epsilon) {
                     t = 0;
@@ -187,7 +192,10 @@ public class SetBlender : MonoBehaviour {
             }
         }
 
-        if (!useAnimationCurve) {
+        // Update output set
+        if (useAnimationCurve) {
+            BlendSets();
+        } else {
             if (Input.GetKeyDown("f")) {
                 ramp = 0;
                 set2.ApplyPreset();
