@@ -198,7 +198,7 @@ MonoBehaviour:
   instancedPointShader: {fileID: 4800000, guid: da60c5ceac9d93949914277c9acee32e, type: 3}
   particleUpdater: {fileID: 7200000, guid: 8faac77cdf44eae4caaf13a51b8e079e, type: 3}
   particlesPerBatch: 1048576
-  batchCount: 8
+  batchCount: 5
   instanceNextGeneration: 1
   updateInstanceCount: 0
   uncapped: 1
@@ -214,7 +214,7 @@ MonoBehaviour:
   voxelShader: {fileID: 4800000, guid: 0d552777edf877b469ce5b6e1ac22326, type: 3}
   voxelMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   voxelBounds: 3
-  voxelSize: 0.015
+  voxelSize: 0.02
   meshesToVoxelize: 11
   renderVoxels: 0
   occlusionMultiplier: 1.66
@@ -361,6 +361,9 @@ MonoBehaviour:
   t: 0
   animate: 1
   speed: 1.6
+  frameRateIndependent: 1
+  useRamp: 0
+  rampSpeed: 1
   epsilon: 0.01
   finalTransform:
     scale: {x: 1, y: 1, z: 1}
@@ -767,3 +770,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recording: 0
   resolution: {x: 1080, y: 1080}
+  framesToCapture: 1

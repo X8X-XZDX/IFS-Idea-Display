@@ -31,6 +31,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
     GraphicsBuffer instancedCommandBuffer;
     GraphicsBuffer.IndirectDrawIndexedArgs[] instancedCommandIndexedData;
 
+    Vector3 newOrigin = Vector3.zero;
+
     void InitializeRenderParams() {
         pointRenderParams = new RenderParams(pointMaterial);
         pointRenderParams.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
@@ -210,8 +212,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
         // Particles To Voxel (Brute Force)
         particleUpdater.SetInt("_GridSize", Mathf.FloorToInt(voxelBounds / voxelSize));
         particleUpdater.SetInt("_GridBounds", voxelBounds);
-        particleUpdater.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
-            particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
+        particleUpdater.SetMatrix("_FinalTransform", Matrix4x4.Translate(-newOrigin));
+        particleUpdater.SetInt("_TransformationCount", affineTransformations.GetTransformCount());
         
         for (int i = 0; i < Mathf.Min(meshesToVoxelize, batchCount); ++i) {
             particleUpdater.SetBuffer(5, "_VertexBuffer", pointCloudMeshes[i].GetVertexBuffer(0));
@@ -247,7 +249,8 @@ public class IteratedFunctionSystem : MonoBehaviour {
             instancedRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
             instancedRenderParams.matProps.SetVector("_ParticleColor", particleColor);
             instancedRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
-            instancedRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            // instancedRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            instancedRenderParams.matProps.SetMatrix("_FinalTransform", Matrix4x4.Translate(-newOrigin));
             instancedRenderParams.matProps.SetBuffer("_Transformations", affineTransformations.GetAffineBuffer());
 
             for (int i = 0; i < batchCount; ++i) {
@@ -259,13 +262,15 @@ public class IteratedFunctionSystem : MonoBehaviour {
             pointRenderParams.matProps.SetFloat("_OcclusionAttenuation", occlusionAttenuation);
             pointRenderParams.matProps.SetVector("_ParticleColor", particleColor);
             pointRenderParams.matProps.SetVector("_OcclusionColor", occlusionColor);
-            pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            // pointRenderParams.matProps.SetMatrix("_FinalTransform", affineTransformations.GetFinalTransform());
+            pointRenderParams.matProps.SetMatrix("_FinalTransform", Matrix4x4.Translate(-newOrigin));
             for (int i = 0; i < batchCount; ++i) {
                 Graphics.RenderMesh(pointRenderParams, pointCloudMeshes[i], 0, Matrix4x4.identity);
             }
         }
     }
 
+    public bool predictOrigin = false;
     void Update() {
         if (Time.time < 1 || updateInstanceCount) {
             instancedCommandIndexedData[0].instanceCount = System.Convert.ToUInt32(affineTransformations.GetTransformCount());
@@ -283,6 +288,37 @@ public class IteratedFunctionSystem : MonoBehaviour {
         if (uncapped) {
             IterateSystem();
         }
+
+        Vector3 origin = Vector3.zero;
+        List<Vector3> points = new();
+
+        var transformations = affineTransformations.GetAffineTransforms();
+
+        for (int i = 0; i < transformations.Count; ++i) {
+            Vector4 augmentedVector = new Vector4(origin.x, origin.y, origin.z, 1);
+
+            points.Add(transformations[i] * augmentedVector);
+        }
+
+        List<Vector3> newPoints = new(points);
+        for (int t = 0; t < transformations.Count; ++t) {
+            for (int i = 0; i < points.Count; ++i) {
+                Vector3 p = points[i];
+                Vector4 augmentedVector = new Vector4(p.x, p.y, p.z, 1);
+
+                newPoints.Add(transformations[t] * augmentedVector);
+            }
+        }
+
+        Vector3 vectorSum = Vector3.zero;
+
+        for (int i = 0; i < newPoints.Count; ++i) {
+            vectorSum += newPoints[i];
+        }
+
+        newOrigin = vectorSum / newPoints.Count;
+
+        if (!predictOrigin) newOrigin = Vector3.zero;
 
         Voxelize();
 
@@ -311,5 +347,11 @@ public class IteratedFunctionSystem : MonoBehaviour {
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one * voxelBounds);
+
+        // Vector3 origin = Vector3.zero;
+        // Gizmos.DrawSphere(Vector3.zero, 0.05f);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(newOrigin, 0.05f);
     }
 }
