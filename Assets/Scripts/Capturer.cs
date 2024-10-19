@@ -22,7 +22,7 @@ public class Capturer : MonoBehaviour {
     void LateUpdate() {
         if (recording && frameCount < framesToCapture) {
             if (frameCount == 0) {
-                rt = new RenderTexture(resolution.x, resolution.y, 24);
+                rt = new RenderTexture(resolution.x, resolution.y, 0);
                 screenshot = new Texture2D(resolution.x, resolution.y, TextureFormat.RGB24, false);
             }
             
