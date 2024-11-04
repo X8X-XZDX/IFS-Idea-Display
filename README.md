@@ -12,6 +12,6 @@ This is not a production asset. Do not use it in your video games. It is a proof
 ![fractal](./Examples/f17.png)
 
 References: <br>
-https://paulbourke.net/fractals/ifs/
-https://en.wikipedia.org/wiki/Chaos_game
-https://www.youtube.com/@acegikmo - Lerp smoothing is broken
+https://paulbourke.net/fractals/ifs/ <br>
+https://en.wikipedia.org/wiki/Chaos_game <br>
+https://www.youtube.com/@acegikmo - Lerp smoothing is broken <br>
