@@ -1,17 +1,10 @@
-# Point Cloud Fractals
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
 
-by Acerola
-
-This repo features tech for drawing as many particles as possible to approximate the attractor of a given iterated function system. It is not an implementation of splatting, rather the tech is game dev friendly and uses the usual rendering pipeline. It also features a real time lighting solution for the 3D fractal by implementing a brute force ambient occlusion approximation. Although, now that I'm thinking about it, I probably could've just done ssao.
-
-This is not a production asset. Do not use it in your video games. It is a proof of concept and tech demo for how much higher end hardware can handle with even midwit implementations. Many improvements could be made.
-
-
-
-![fractal](./Examples/flagship.png)
-![fractal](./Examples/f17.png)
-
-References: <br>
-https://paulbourke.net/fractals/ifs/ <br>
-https://en.wikipedia.org/wiki/Chaos_game <br>
-https://www.youtube.com/@acegikmo - Lerp smoothing is broken <br>
+\f0\fs24 \cf0 # Using IFS to Plot Ideas\
+\
+The idea is that as you have a conversation with an AI, the point cloud builds, with markings to sus out individual dataset groups.}
